@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>H-GAC - Demand Inputs</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* <span>Model Scenarios</span> mega-menu (cascading) */
+    .pm-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    .tabs .tab .pm-container {
+      position: relative;
+    }
+
+    .pm-trigger {
+      padding: 0;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: inherit;
+      font-weight: inherit;
+      color: inherit;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+
+    .pm-trigger:hover,
+    .pm-trigger[aria-expanded="true"] {
+      opacity: 0.8;
+    }
+
+    .tabs .tab .pm-trigger {
+      color: inherit;
+    }
+
+    .pm-trigger-icon {
+      font-size: 11px;
+    }
+
+    .pm-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      z-index: 1000;
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.16);
+      padding: 8px 0;
+      display: none;
+      min-width: 240px;
+      transition: min-width 0.2s ease;
+    }
+
+    .pm-menu.open {
+      display: block;
+    }
+
+    .pm-columns {
+      position: relative;
+      display: block;
+      height: 320px;
+      padding: 4px 0;
+    }
+
+    .pm-column {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 240px;
+      overflow-y: auto;
+      padding: 4px 0;
+      box-sizing: border-box;
+    }
+
+    .pm-column-main { left: 0; border-right: 1px solid #f0f0f0; }
+    .pm-column-sub { 
+      left: 240px; 
+      border-right: 1px solid #f0f0f0; 
+      display: none;
+    }
+    .pm-column-subsub { 
+      left: 480px; 
+      display: none;
+    }
+    .pm-column-sub.visible { display: block; }
+    .pm-column-subsub.visible { display: block; }
+
+    .pm-column-title {
+      padding: 6px 16px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #999;
+    }
+
+    .pm-item {
+      padding: 8px 18px;
+      font-size: 13px;
+      color: #333;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      white-space: nowrap;
+      transition: background-color 0.12s, color 0.12s;
+    }
+
+    .pm-item:hover,
+    .pm-item.pm-hover {
+      background: #f3f7ef;
+    }
+
+    .pm-item.pm-selected-leaf {
+      background: #2d5016;
+      color: #fff;
+    }
+
+    .pm-item-label {
+      flex: 1;
+    }
+
+    .pm-item-chevron {
+      font-size: 10px;
+      color: #999;
+      margin-left: 8px;
+    }
+
+    .pm-item.has-children .pm-item-chevron {
+      display: inline-block;
+    }
+
+    .pm-item:not(.has-children) .pm-item-chevron {
+      display: none;
+    }
+
+    .pm-item:focus-visible {
+      outline: 2px solid var(--accent, #4A90E2);
+      outline-offset: -2px;
+    }
+
+    @media (max-width: 900px) {
+      .pm-menu {
+        min-width: 100%;
+        right: auto;
+      }
+    }
+  </style>
+
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:_dlc_DocId msdt:dt="string">NMHUSEVQPPWE-1272307384-1919</mso:_dlc_DocId>
+<mso:_dlc_DocIdItemGuid msdt:dt="string">c68ec248-699e-425d-87f6-8e17d8edee60</mso:_dlc_DocIdItemGuid>
+<mso:_dlc_DocIdUrl msdt:dt="string">https://arcadiso365.sharepoint.com/teams/ch-103076646/_layouts/15/DocIdRedir.aspx?ID=NMHUSEVQPPWE-1272307384-1919, NMHUSEVQPPWE-1272307384-1919</mso:_dlc_DocIdUrl>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>
+<body>
+  <header>
+    <img src="assets/wc_logo 2.png" alt="FIFA Logo" class="logo" />
+    <div class="tabs">
+      <div class="tab"><a href="index.html" style="color: inherit; text-decoration: none;">Overview</a></div>
+      <div class="tab"><a href="big-data-analysis.html" style="color: inherit; text-decoration: none;">Prior Events Analysis</a></div>
+      <div class="tab active"><a href="demand-scenario.html" style="color: inherit; text-decoration: none;">Demand Inputs</a></div>
+      <div class="tab"><a href="tmp-scenario.html" style="color: inherit; text-decoration: none;">Supply Inputs</a></div>
+      <div class="tab">
+        <div class="pm-container">
+          <button id="pmTrigger" class="pm-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+            <span>Model Scenarios</span>
+            <span class="pm-trigger-icon">▾</span>
+          </button>
+          <div id="pmMenu" class="pm-menu" role="menu" aria-label="Model Scenarios menu">
+            <div class="pm-columns">
+              <div class="pm-column pm-column-main">
+                <div class="pm-column-title"></div>
+                <div id="pmMainList"></div>
+              </div>
+              <div class="pm-column pm-column-sub">
+                <div class="pm-column-title"></div>
+                <div id="pmSubList"></div>
+              </div>
+              <div class="pm-column pm-column-subsub">
+                <div class="pm-column-title">Detail</div>
+                <div id="pmSubSubList"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tab"><a href="game-plan.html" style="color: inherit; text-decoration: none;">Game Plan</a></div>
+      <div class="tab"><a href="post-event-analysis.html" style="color: inherit; text-decoration: none;">Post Event Analysis</a></div>
+    </div>
+    <img src="assets/image 2023.png" alt="HGAC Logo" class="logo" />
+  </header>
+
+  <main>
+    <div class="control-panel">
+      <!-- Import Section -->
+      <div class="section">
+        <div class="import-section">
+          <!-- <button class="import-btn" id="btnImportScenario">Import Scenario</button> -->
+          <select class="select-input" id="importMethodSelect" style="display: none; margin-top: 10px;">
+            <option value="">-- Select Import Method --</option>
+            <optgroup label="Select Prebuilt Scenario">
+              <option value="baseline_weekday">Baseline Weekday</option>
+              <option value="baseline_weekend">Baseline Weekend</option>
+            </optgroup>
+            <option value="csv">Import from CSV</option>
+          </select>
+          <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+          <div id="importedScenarioName" class="imported-scenario-name" style="display: none;">
+            <span class="scenario-label">Imported Scenario:</span>
+            <span id="scenarioNameDisplay" class="scenario-name"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PART 1: GENERAL PARAMETERS -->
+      <div class="section">
+        <div class="card">
+          <div class="hd">General Parameters</div>
+          <div class="bd">
+            <div class="control-group">
+              <label class="control-label">Day Type</label>
+              <div class="day-type-selector">
+                <div class="day-type-left">
+                  <div class="toggle-group">
+                    <button class="toggle-btn active" id="btnWeekday">Weekday</button>
+                    <button class="toggle-btn" id="btnWeekend">Weekend</button>
+                  </div>
+                </div>
+                <div class="day-type-or">Or</div>
+                <div class="day-type-right">
+                  <button class="calendar-btn" id="btnCalendar">📅 Select FIFA Game Date</button>
+                  <input type="text" id="selectedDate" class="date-display" readonly placeholder="No date selected">
+                </div>
+              </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="profile-note" style="margin-bottom: 12px;">Values are automatically adjusted such that Outside Region percentage is at least equal to International percentage.</div>
+
+            <div class="control-row">
+              <div class="control-group">
+                <label class="control-label">International / Domestic Split</label>
+                <input type="range" id="internationalSplit" class="slider" min="0" max="100" step="1" value="30">
+                <div class="split-value">
+                  <span>International: <span id="internationalValue">30</span>%</span>
+                  <span>Domestic: <span id="domesticValue">70</span>%</span>
+                </div>
+              </div>
+
+              <div class="control-group">
+                <label class="control-label">Outside Region / Inside Region Split</label>
+                <input type="range" id="regionSplit" class="slider" min="0" max="100" step="1" value="50">
+                <div class="split-value">
+                  <span>Outside Region: <span id="outsideRegionValue">50</span>%</span>
+                  <span>Inside Region: <span id="insideRegionValue">50</span>%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="control-group">
+              <label class="control-label">Travel Demand Management (TDM)</label>
+              <label class="control-label" style="font-size: 13px; font-weight: 500; margin-top: 6px;">Background Traffic Reduction</label>
+              <input type="range" id="tdmReduction" class="slider" min="0" max="30" step="1" value="5">
+              <div class="slider-value"><span id="tdmReductionValue">5</span>%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODEL SELECTORS -->
+      <div class="section">
+        <div class="event-selector">
+          <button class="event-btn active" id="btnNRG">NRG Stadium</button>
+          <button class="event-btn" id="btnFanFest">Fan Fest</button>
+        </div>
+      </div>
+
+      <!-- PART 2: MODEL-SPECIFIC PARAMETERS -->
+
+      <!-- NRG STADIUM SECTION -->
+      <div class="section" id="nrgSection">
+        <div class="card">
+          <div class="hd">Model-Specific Parameters - NRG Stadium</div>
+          <div class="bd">
+            <!-- Game Start Time & Duration -->
+            <div class="control-row">
+              <div class="control-group">
+                <label class="control-label">Game Start Time</label>
+                <select id="nrg_gameStartTime" class="select-input">
+                  <!-- <option value="11:00">11:00 AM</option>
+                  <option value="11:30">11:30 AM</option> -->
+                  <option value="12:00">12:00 PM</option>
+                  <option value="12:30">12:30 PM</option>
+                  <option value="13:00">1:00 PM</option>
+                  <option value="13:30">1:30 PM</option>
+                  <option value="14:00">2:00 PM</option>
+                  <option value="14:30">2:30 PM</option>
+                  <option value="15:00">3:00 PM</option>
+                  <option value="15:30">3:30 PM</option>
+                  <option value="16:00">4:00 PM</option>
+                  <option value="16:30">4:30 PM</option>
+                  <option value="17:00">5:00 PM</option>
+                  <option value="17:30">5:30 PM</option>
+                  <option value="18:00">6:00 PM</option>
+                </select>
+              </div>
+
+              <div class="control-group">
+                <label class="control-label">Game Duration (minutes)</label>
+                <select id="nrg_gameDuration" class="select-input">
+                  <option value="120">120 minutes</option>
+                  <option value="150" selected>150 minutes</option>
+                  <option value="180">180 minutes</option>
+                  <option value="210">210 minutes</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- NRG Attendance -->
+            <div class="control-group">
+              <label class="control-label">Event Attendance - NRG Stadium</label>
+              <input type="range" id="nrg_attendance" class="slider" min="0" max="75000" step="5000" value="72000">
+              <div class="slider-value"><span id="nrg_attendanceValue">72,000</span></div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- Spectator/FIFA Split -->
+            <div class="profile-note" style="margin-bottom: 12px;">Spectators and FIFA Constituent Groups automatically sum to NRG Stadium Event Attendance.</div>
+
+            <div class="control-row">
+              <div class="control-group">
+                <label class="control-label">NRG Stadium - Spectators</label>
+                <input type="range" id="nrg_spectator" class="slider" min="0" max="58000" step="1000" value="58000">
+                <div class="slider-value"><span id="nrg_spectatorValue">58,000</span></div>
+              </div>
+
+              <div class="control-group">
+                <label class="control-label">NRG Stadium - FIFA Constituent Groups</label>
+                <input type="range" id="nrg_fifaConstituent" class="slider" min="0" max="17000" step="1000" value="14000">
+                <div class="slider-value"><span id="nrg_fifaConstituentValue">14,000</span></div>
+              </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- Mode Share -->
+            <div class="control-row">
+              <div class="control-group">
+                <label class="control-label">Ingress Mode Share</label>
+                <div class="mode-share-grid">
+                  <div class="mode-item">
+                    <span class="mode-label">Transit (0-50%)</span>
+                    <input type="range" id="nrg_ingressTransit" class="slider" min="0" max="50" step="1" value="21">
+                    <div class="slider-value"><span id="nrg_ingressTransitValue">21</span>%</div>
+                  </div>
+                  <div class="mode-item">
+                    <span class="mode-label">TNC (0-30%)</span>
+                    <input type="range" id="nrg_ingressTNC" class="slider" min="0" max="30" step="1" value="16">
+                    <div class="slider-value"><span id="nrg_ingressTNCValue">16</span>%</div>
+                  </div>
+                  <div class="mode-item">
+                    <span class="mode-label">Walk/Bike (0-5%)</span>
+                    <input type="range" id="nrg_ingressWalkBike" class="slider" min="0" max="5" step="1" value="2">
+                    <div class="slider-value"><span id="nrg_ingressWalkBikeValue">2</span>%</div>
+                  </div>
+                  <div class="mode-item readonly">
+                    <span class="mode-label">Auto</span>
+                    <div class="auto-value"><span id="nrg_ingressAutoValue">61</span>%</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="control-group">
+                <label class="control-label">Egress Mode Share</label>
+                <div class="mode-share-grid">
+                  <div class="mode-item">
+                    <span class="mode-label">Transit (0-50%)</span>
+                    <input type="range" id="nrg_egressTransit" class="slider" min="0" max="50" step="1" value="21">
+                    <div class="slider-value"><span id="nrg_egressTransitValue">21</span>%</div>
+                  </div>
+                  <div class="mode-item">
+                    <span class="mode-label">TNC (0-30%)</span>
+                    <input type="range" id="nrg_egressTNC" class="slider" min="0" max="30" step="1" value="16">
+                    <div class="slider-value"><span id="nrg_egressTNCValue">16</span>%</div>
+                  </div>
+                  <div class="mode-item">
+                    <span class="mode-label">Walk/Bike (0-5%)</span>
+                    <input type="range" id="nrg_egressWalkBike" class="slider" min="0" max="5" step="1" value="2">
+                    <div class="slider-value"><span id="nrg_egressWalkBikeValue">2</span>%</div>
+                  </div>
+                  <div class="mode-item readonly">
+                    <span class="mode-label">Auto</span>
+                    <div class="auto-value"><span id="nrg_egressAutoValue">61</span>%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- Arrival/Departure Profiles -->
+            <div class="control-group">
+              <label class="control-label">Arrival & Departure Profiles</label>
+              <div class="control-group" style="margin-bottom: 12px;">
+                <label class="control-label" style="font-size: 13px; font-weight: 500;">Select from Prior Events</label>
+                <select id="nrg_profilePreset" class="select-input">
+                  <option value="default">Default (Profile)</option>
+                  <option value="NRG Jan 8 2024 College Football v4_grouped.csv">NRG Jan 8 2024 College Football</option>
+                  <option value="NRG Jan 11 Playoff v4_grouped.csv">NRG Jan 11 Playoff</option>
+                  <option value="NRG Jun 28 Beyonce Concert v4_grouped.csv">NRG Jun 28 Beyonce Concert</option>
+                  <option value="NRG Oct 6 2024 Football Game v4_grouped.csv">NRG Oct 6 2024 Football Game</option>
+                  <option value="NRG Sep 15 2024 Football Game v4_grouped.csv">NRG Sep 15 2024 Football Game</option>
+                  <option value="NRG Dec 27 2023 College Bowl v4_grouped.csv">NRG Dec 27 2023 College Bowl</option>
+                  <option value="NRG Mar 8 2025 Rodeo v4_grouped.csv">NRG Mar 8 2025 Rodeo</option>
+                  <option value="Daikin Oct 2 2024 Astros Playoff Game v4_grouped.csv">Daikin Oct 2 2024 Astros Playoff Game</option>
+                  <option value="Houston Mar 30 2025 Toyota Center v4_grouped.csv">Houston Mar 30 2025 Toyota Center</option>
+                  <option value="Houston Oct 25 2024 Harris Rally v4_grouped.csv">Houston Oct 25 2024 Harris Rally</option>
+                </select>
+              </div>
+              <div class="profile-note">Adjust the hourly distribution for arrival (ingress) and departure (egress). Each line must sum to 100%. The red dotted line indicates game start time, and the orange dotted line indicates game end time.</div>
+
+              <div class="profile-layout">
+                <div class="profile-inputs">
+                  <table class="profile-table">
+                    <thead>
+                      <tr>
+                        <th>Hour</th>
+                        <th>Ingress %</th>
+                        <th>Egress %</th>
+                      </tr>
+                    </thead>
+                    <tbody id="nrg_profileInputsBody">
+                      <!-- Generated by JS -->
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="profile-chart-container">
+                  <svg id="nrg_profileChart" class="profile-chart" viewBox="0 0 800 300">
+                    <!-- Grid lines -->
+                    <g class="grid-lines">
+                      <line x1="60" y1="250" x2="740" y2="250" stroke="#e0e0e0" stroke-width="1"/>
+                      <line x1="60" y1="187.5" x2="740" y2="187.5" stroke="#e0e0e0" stroke-width="1"/>
+                      <line x1="60" y1="125" x2="740" y2="125" stroke="#e0e0e0" stroke-width="1"/>
+                      <line x1="60" y1="62.5" x2="740" y2="62.5" stroke="#e0e0e0" stroke-width="1"/>
+                      <line x1="60" y1="0" x2="740" y2="0" stroke="#e0e0e0" stroke-width="1"/>
+                    </g>
+
+                    <!-- Y-axis labels -->
+                    <text x="45" y="254" font-size="11" fill="#6b7280" text-anchor="end">0%</text>
+                    <text x="45" y="191.5" font-size="11" fill="#6b7280" text-anchor="end">18.75%</text>
+                    <text x="45" y="129" font-size="11" fill="#6b7280" text-anchor="end">37.5%</text>
+                    <text x="45" y="66.5" font-size="11" fill="#6b7280" text-anchor="end">56.25%</text>
+                    <text x="45" y="4" font-size="11" fill="#6b7280" text-anchor="end">75%</text>
+
+                    <!-- Game time indicator lines -->
+                    <line id="nrg_gameStartLine" x1="0" y1="0" x2="0" y2="250" stroke="#ff0000" stroke-width="2" stroke-dasharray="5,5" opacity="0.6"/>
+                    <line id="nrg_gameEndLine" x1="0" y1="0" x2="0" y2="250" stroke="#ff6600" stroke-width="2" stroke-dasharray="5,5" opacity="0.6"/>
+
+                    <!-- X-axis labels (6am-11pm) -->
+                    <g class="x-axis-labels">
+                      <text x="60" y="270" font-size="10" fill="#6b7280" text-anchor="middle">6am</text>
+                      <text x="100" y="270" font-size="10" fill="#6b7280" text-anchor="middle">7am</text>
+                      <text x="140" y="270" font-size="10" fill="#6b7280" text-anchor="middle">8am</text>
+                      <text x="180" y="270" font-size="10" fill="#6b7280" text-anchor="middle">9am</text>
+                      <text x="220" y="270" font-size="10" fill="#6b7280" text-anchor="middle">10am</text>
+                      <text x="260" y="270" font-size="10" fill="#6b7280" text-anchor="middle">11am</text>
+                      <text x="300" y="270" font-size="10" fill="#6b7280" text-anchor="middle">12pm</text>
+                      <text x="340" y="270" font-size="10" fill="#6b7280" text-anchor="middle">1pm</text>
+                      <text x="380" y="270" font-size="10" fill="#6b7280" text-anchor="middle">2pm</text>
+                      <text x="420" y="270" font-size="10" fill="#6b7280" text-anchor="middle">3pm</text>
+                      <text x="460" y="270" font-size="10" fill="#6b7280" text-anchor="middle">4pm</text>
+                      <text x="500" y="270" font-size="10" fill="#6b7280" text-anchor="middle">5pm</text>
+                      <text x="540" y="270" font-size="10" fill="#6b7280" text-anchor="middle">6pm</text>
+                      <text x="580" y="270" font-size="10" fill="#6b7280" text-anchor="middle">7pm</text>
+                      <text x="620" y="270" font-size="10" fill="#6b7280" text-anchor="middle">8pm</text>
+                      <text x="660" y="270" font-size="10" fill="#6b7280" text-anchor="middle">9pm</text>
+                      <text x="700" y="270" font-size="10" fill="#6b7280" text-anchor="middle">10pm</text>
+                      <text x="740" y="270" font-size="10" fill="#6b7280" text-anchor="middle">11pm</text>
+                    </g>
+
+                    <polyline id="nrg_ingressLine" fill="none" stroke="url(#ingressGradient)" stroke-width="3"/>
+                    <polyline id="nrg_egressLine" fill="none" stroke="#f97316" stroke-width="3"/>
+                    <g id="nrg_ingressPoints"></g>
+                    <g id="nrg_egressPoints"></g>
+
+                    <defs>
+                      <linearGradient id="ingressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#5b6cf8;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#9333ea;stop-opacity:1" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+
+                  <div class="profile-totals">
+                    <div class="profile-total ingress-total">
+                      <span class="profile-total-label">Ingress Total:</span>
+                      <span class="profile-total-value" id="nrg_ingressTotal">0.0%</span>
+                      <span class="profile-status" id="nrg_ingressStatus"></span>
+                    </div>
+                    <div class="profile-total egress-total">
+                      <span class="profile-total-label">Egress Total:</span>
+                      <span class="profile-total-value" id="nrg_egressTotal">100.0%</span>
+                      <span class="profile-status" id="nrg_egressStatus">✓</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAN FEST SECTION -->
+      <div class="section" id="fanfestSection" style="display: none;">
+        <div class="card">
+          <div class="hd">Model-Specific Parameters - Fan Fest</div>
+          <div class="bd">
+            <!-- Fan Fest Attendance -->
+            <div class="control-group">
+              <label class="control-label">Event Attendance - Fan Fest</label>
+              <input type="range" id="fanfest_attendance" class="slider" min="0" max="50000" step="5000" value="20000">
+              <div class="slider-value"><span id="fanfest_attendanceValue">20,000</span></div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- Mode Share -->
+            <div class="control-row">
+              <div class="control-group">
+                <label class="control-label">Ingress Mode Share</label>
+                <div class="mode-share-grid">
+                  <div class="mode-item">
+                    <span class="mode-label">Transit (0-50%)</span>
+                    <input type="range" id="fanfest_ingressTransit" class="slider" min="0" max="50" step="1" value="38">
+                    <div class="slider-value"><span id="fanfest_ingressTransitValue">38</span>%</div>
+                  </div>
+                  <div class="mode-item">
+                    <span class="mode-label">TNC (0-30%)</span>
+                    <input type="range" id="fanfest_ingressTNC" class="slider" min="0" max="30" step="1" value="7">
+                    <div class="slider-value"><span id="fanfest_ingressTNCValue">7</span>%</div>
+                  </div>
+                  <div class="mode-item">
+                    <span class="mode-label">Walk/Bike (0-5%)</span>
+                    <input type="range" id="fanfest_ingressWalkBike" class="slider" min="0" max="5" step="1" value="5">
+                    <div class="slider-value"><span id="fanfest_ingressWalkBikeValue">5</span>%</div>
+                  </div>
+                  <div class="mode-item readonly">
+                    <span class="mode-label">Auto</span>
+                    <div class="auto-value"><span id="fanfest_ingressAutoValue">50</span>%</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="control-group">
+                <label class="control-label">Egress Mode Share</label>
+                <div class="mode-share-grid">
+                  <div class="mode-item">
+                    <span class="mode-label">Transit (0-50%)</span>
+                    <input type="range" id="fanfest_egressTransit" class="slider" min="0" max="50" step="1" value="38">
+                    <div class="slider-value"><span id="fanfest_egressTransitValue">38</span>%</div>
+                  </div>
+                  <div class="mode-item">
+                    <span class="mode-label">TNC (0-30%)</span>
+                    <input type="range" id="fanfest_egressTNC" class="slider" min="0" max="30" step="1" value="7">
+                    <div class="slider-value"><span id="fanfest_egressTNCValue">7</span>%</div>
+                  </div>
+                  <div class="mode-item">
+                    <span class="mode-label">Walk/Bike (0-5%)</span>
+                    <input type="range" id="fanfest_egressWalkBike" class="slider" min="0" max="5" step="1" value="5">
+                    <div class="slider-value"><span id="fanfest_egressWalkBikeValue">5</span>%</div>
+                  </div>
+                  <div class="mode-item readonly">
+                    <span class="mode-label">Auto</span>
+                    <div class="auto-value"><span id="fanfest_egressAutoValue">50</span>%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- Arrival/Departure Profiles (6am-11pm) -->
+            <div class="control-group">
+              <label class="control-label">Arrival & Departure Profiles</label>
+              <div class="profile-note">Adjust the hourly distribution for arrival (ingress) and departure (egress). Each line must sum to 100%.</div>
+
+              <div class="profile-layout">
+                <div class="profile-inputs">
+                  <table class="profile-table">
+                    <thead>
+                      <tr>
+                        <th>Hour</th>
+                        <th>Ingress %</th>
+                        <th>Egress %</th>
+                      </tr>
+                    </thead>
+                    <tbody id="fanfest_profileInputsBody">
+                      <!-- Generated by JS -->
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="profile-chart-container">
+                  <svg id="fanfest_profileChart" class="profile-chart" viewBox="0 0 800 300">
+                    <g class="grid-lines">
+                      <line x1="60" y1="250" x2="740" y2="250" stroke="#e0e0e0" stroke-width="1"/>
+                      <line x1="60" y1="187.5" x2="740" y2="187.5" stroke="#e0e0e0" stroke-width="1"/>
+                      <line x1="60" y1="125" x2="740" y2="125" stroke="#e0e0e0" stroke-width="1"/>
+                      <line x1="60" y1="62.5" x2="740" y2="62.5" stroke="#e0e0e0" stroke-width="1"/>
+                      <line x1="60" y1="0" x2="740" y2="0" stroke="#e0e0e0" stroke-width="1"/>
+                    </g>
+
+                    <text x="45" y="254" font-size="11" fill="#6b7280" text-anchor="end">0%</text>
+                    <text x="45" y="191.5" font-size="11" fill="#6b7280" text-anchor="end">18.75%</text>
+                    <text x="45" y="129" font-size="11" fill="#6b7280" text-anchor="end">37.5%</text>
+                    <text x="45" y="66.5" font-size="11" fill="#6b7280" text-anchor="end">56.25%</text>
+                    <text x="45" y="4" font-size="11" fill="#6b7280" text-anchor="end">75%</text>
+
+                    <g class="x-axis-labels">
+                      <text x="60" y="270" font-size="10" fill="#6b7280" text-anchor="middle">6am</text>
+                      <text x="100" y="270" font-size="10" fill="#6b7280" text-anchor="middle">7am</text>
+                      <text x="140" y="270" font-size="10" fill="#6b7280" text-anchor="middle">8am</text>
+                      <text x="180" y="270" font-size="10" fill="#6b7280" text-anchor="middle">9am</text>
+                      <text x="220" y="270" font-size="10" fill="#6b7280" text-anchor="middle">10am</text>
+                      <text x="260" y="270" font-size="10" fill="#6b7280" text-anchor="middle">11am</text>
+                      <text x="300" y="270" font-size="10" fill="#6b7280" text-anchor="middle">12pm</text>
+                      <text x="340" y="270" font-size="10" fill="#6b7280" text-anchor="middle">1pm</text>
+                      <text x="380" y="270" font-size="10" fill="#6b7280" text-anchor="middle">2pm</text>
+                      <text x="420" y="270" font-size="10" fill="#6b7280" text-anchor="middle">3pm</text>
+                      <text x="460" y="270" font-size="10" fill="#6b7280" text-anchor="middle">4pm</text>
+                      <text x="500" y="270" font-size="10" fill="#6b7280" text-anchor="middle">5pm</text>
+                      <text x="540" y="270" font-size="10" fill="#6b7280" text-anchor="middle">6pm</text>
+                      <text x="580" y="270" font-size="10" fill="#6b7280" text-anchor="middle">7pm</text>
+                      <text x="620" y="270" font-size="10" fill="#6b7280" text-anchor="middle">8pm</text>
+                      <text x="660" y="270" font-size="10" fill="#6b7280" text-anchor="middle">9pm</text>
+                      <text x="700" y="270" font-size="10" fill="#6b7280" text-anchor="middle">10pm</text>
+                      <text x="740" y="270" font-size="10" fill="#6b7280" text-anchor="middle">11pm</text>
+                    </g>
+
+                    <polyline id="fanfest_ingressLine" fill="none" stroke="url(#fanfestIngressGradient)" stroke-width="3"/>
+                    <polyline id="fanfest_egressLine" fill="none" stroke="#f97316" stroke-width="3"/>
+                    <g id="fanfest_ingressPoints"></g>
+                    <g id="fanfest_egressPoints"></g>
+
+                    <defs>
+                      <linearGradient id="fanfestIngressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#5b6cf8;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#9333ea;stop-opacity:1" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+
+                  <div class="profile-totals">
+                    <div class="profile-total ingress-total">
+                      <span class="profile-total-label">Ingress Total:</span>
+                      <span class="profile-total-value" id="fanfest_ingressTotal">0.0%</span>
+                      <span class="profile-status" id="fanfest_ingressStatus"></span>
+                    </div>
+                    <div class="profile-total egress-total">
+                      <span class="profile-total-label">Egress Total:</span>
+                      <span class="profile-total-value" id="fanfest_egressTotal">100.0%</span>
+                      <span class="profile-status" id="fanfest_egressStatus">✓</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Airports section removed -->
+
+      <!-- <div class="section">
+        <button class="save-scenario-btn" id="btnSaveScenario">Save Scenario</button>
+      </div> -->
+    </div>
+
+    <!-- Calendar Modal -->
+    <div class="modal" id="calendarModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Select FIFA Game Date</h3>
+          <button class="modal-close" id="closeModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="calendar-dates">
+            <button class="fifa-date" data-date="2026-06-14" data-day="Saturday">June 14, 2026 (Sunday): Group E: Germany vs. Curaçao</button>
+            <button class="fifa-date" data-date="2026-06-17" data-day="Tuesday">June 17, 2026 (Wednesday): Group K: Portugal vs. Playoff Winner 1</button>
+            <button class="fifa-date" data-date="2026-06-20" data-day="Saturday">June 20, 2026 (Saturday):  Group F: Netherlands vs. UEFA Playoff Winner B</button>
+            <button class="fifa-date" data-date="2026-06-23" data-day="Tuesday">June 23, 2026 (Tuesday): Group K: Portugal vs. Uzbekistan</button>
+            <button class="fifa-date" data-date="2026-06-26" data-day="Friday">June 26, 2026 (Friday): Group H: Cape Verde vs. Saudi Arabia</button>
+            <button class="fifa-date" data-date="2026-06-29" data-day="Monday">June 29, 2026 (Monday): Group C Winner vs. Group F Runner-up</button>
+            <button class="fifa-date" data-date="2026-07-04" data-day="Saturday">July 4, 2026 (Saturday): Winner of Round 32 Match 73 vs. Winner of Round 32 Match 74</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Modal (6.1c - Step 2) -->
+    <div class="modal" id="summaryModal">
+      <div class="modal-content" style="max-width: 800px; max-height: 80vh; overflow-y: auto;">
+        <div class="modal-header">
+          <h3>Scenario Summary</h3>
+          <button class="modal-close" id="closeSummaryModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="summaryTableContainer"></div>
+          <div class="modal-actions">
+            <button class="btn-cancel" id="btnCancelSummary">Cancel</button>
+            <button class="btn-save" id="btnContinueToName">Continue</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Save Scenario Name Modal (Step 3) -->
+    <div class="modal" id="saveScenarioModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Save Scenario</h3>
+          <button class="modal-close" id="closeSaveModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <label for="scenarioNameInput" class="input-label">Scenario Name:</label>
+          <input type="text" id="scenarioNameInput" class="text-input" placeholder="Enter scenario name...">
+          <div class="modal-actions">
+            <button class="btn-cancel" id="btnCancelSave">Cancel</button>
+            <button class="btn-save" id="btnConfirmSave">Save & Download</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-org">
+        <svg class="footer-home-icon" viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        <div>
+          <strong>Houston-Galveston Area Council</strong><br>
+          3555 Timmons Ln.<br>
+          Houston, TX 77027
+        </div>
+      </div>
+      <div class="footer-contact">
+        <h4>Contact Us</h4>
+        <p>Phone: 713-627-3200</p>
+        <div class="footer-social">
+          <a href="https://www.facebook.com/HouGalvAreaCog" target="_blank" aria-label="Facebook"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M22.675 0H1.325C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.323-.593 1.323-1.325V1.325C24 .593 23.407 0 22.675 0z"/></svg></a>
+          <a href="https://x.com/HouGalvAreaCog" target="_blank" aria-label="X"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+          <a href="https://www.linkedin.com/company/houston-galveston-area-council" target="_blank" aria-label="LinkedIn"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+          <a href="https://www.youtube.com/HouGalvAreaCog" target="_blank" aria-label="YouTube"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.5 12 3.5 12 3.5s-7.505 0-9.377.55a3.016 3.016 0 0 0-2.122 2.136C0 8.1 0 12 0 12s0 3.9.501 5.814a3.016 3.016 0 0 0 2.122 2.136c1.872.55 9.377.55 9.377.55s7.505 0 9.377-.55a3.016 3.016 0 0 0 2.122-2.136C24 15.9 24 12 24 12s0-3.9-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+          <a href="https://www.instagram.com/hougalvareacog/" target="_blank" aria-label="Instagram"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+
+
+  <script src="js/demand-scenario.js"></script>
+  <script src="js/performance-measures-menu.js"></script>
+</body>
+</html>

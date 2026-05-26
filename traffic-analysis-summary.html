@@ -1,0 +1,2476 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:mso="urn:schemas-microsoft-com:office:office"
+  xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>H-GAC - Traffic Analysis Summary (Mock)</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="js/d3.v7.min.js"></script>
+  <link rel="stylesheet" href="css/leaflet.css" />
+  <script src="js/leaflet.js"></script>
+  <style>
+    /* Model Scenarios mega-menu (cascading) */
+    .pm-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    .tabs .tab.active .pm-container {
+      position: relative;
+    }
+
+    .pm-trigger {
+      padding: 0;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: inherit;
+      font-weight: inherit;
+      color: inherit;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+
+    .pm-trigger:hover,
+    .pm-trigger[aria-expanded="true"] {
+      opacity: 0.8;
+    }
+
+    .tabs .tab.active .pm-trigger {
+      color: inherit;
+    }
+
+    .pm-trigger-icon {
+      font-size: 11px;
+    }
+
+    .pm-breadcrumb {
+      font-size: 12px;
+      color: var(--muted, #666);
+      max-width: 520px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .pm-breadcrumb strong {
+      color: var(--ink, #333);
+    }
+
+    .pm-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      z-index: 1000;
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+      padding: 8px 0;
+      display: none;
+      min-width: 240px;
+      transition: min-width 0.2s ease;
+    }
+
+    .pm-menu.open {
+      display: block;
+    }
+
+    .pm-columns {
+      position: relative;
+      display: block;
+      height: 320px;
+      padding: 4px 0;
+    }
+
+    .pm-column {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 240px;
+      overflow-y: auto;
+      padding: 4px 0;
+      box-sizing: border-box;
+    }
+
+    .pm-column-main {
+      left: 0;
+      border-right: 1px solid #f0f0f0;
+    }
+
+    .pm-column-sub {
+      left: 240px;
+      border-right: 1px solid #f0f0f0;
+      display: none;
+    }
+
+    .pm-column-subsub {
+      left: 480px;
+      display: none;
+    }
+
+    .pm-column-sub.visible {
+      display: block;
+    }
+
+    .pm-column-subsub.visible {
+      display: block;
+    }
+
+    .pm-column-title {
+      padding: 6px 16px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #999;
+    }
+
+    .pm-item {
+      padding: 8px 18px;
+      font-size: 13px;
+      color: #333;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      white-space: nowrap;
+      transition: background-color 0.12s, color 0.12s;
+    }
+
+    .pm-item:hover,
+    .pm-item.pm-hover {
+      background: #f3f7ef;
+    }
+
+    .pm-item.pm-selected-leaf {
+      background: #2d5016;
+      color: #fff;
+    }
+
+    .pm-item-label {
+      flex: 1;
+    }
+
+    .pm-item-chevron {
+      font-size: 10px;
+      color: #999;
+      margin-left: 8px;
+    }
+
+    .pm-item.has-children .pm-item-chevron {
+      display: inline-block;
+    }
+
+    .pm-item:not(.has-children) .pm-item-chevron {
+      display: none;
+    }
+
+    /* Keyboard focus outline */
+    .pm-item:focus-visible {
+      outline: 2px solid var(--accent, #4A90E2);
+      outline-offset: -2px;
+    }
+
+    /* Ensure menu doesn't overflow viewport horizontally */
+    @media (max-width: 900px) {
+      .pm-menu {
+        min-width: 100%;
+        right: auto;
+      }
+    }
+  </style>
+
+  <!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:_dlc_DocId msdt:dt="string">NMHUSEVQPPWE-1272307384-1499</mso:_dlc_DocId>
+<mso:_dlc_DocIdItemGuid msdt:dt="string">ff3bfc59-fd95-44c5-b7ce-27310ad41d97</mso:_dlc_DocIdItemGuid>
+<mso:_dlc_DocIdUrl msdt:dt="string">https://arcadiso365.sharepoint.com/teams/ch-103076646/_layouts/15/DocIdRedir.aspx?ID=NMHUSEVQPPWE-1272307384-1499, NMHUSEVQPPWE-1272307384-1499</mso:_dlc_DocIdUrl>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>
+
+<body>
+  <header>
+    <img src="assets/wc_logo 2.png" alt="FIFA Logo" class="logo" />
+    <div class="tabs">
+      <div class="tab"><a href="index.html" style="color: inherit; text-decoration: none;">Overview</a></div>
+      <div class="tab"><a href="big-data-analysis.html" style="color: inherit; text-decoration: none;">Prior Events
+          Analysis</a></div>
+
+      <div class="tab"><a href="demand-scenario.html" style="color: inherit; text-decoration: none;">Demand Inputs</a>
+      </div>
+      <div class="tab"><a href="tmp-scenario.html" style="color: inherit; text-decoration: none;">Supply Inputs</a>
+      </div>
+      <div class="tab active">
+        <div class="pm-container">
+          <button id="pmTrigger" class="pm-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+            <span>Model Scenarios</span>
+            <span class="pm-trigger-icon">▾</span>
+          </button>
+          <div id="pmMenu" class="pm-menu" role="menu" aria-label="Model Scenarios menu">
+            <div class="pm-columns">
+              <div class="pm-column pm-column-main">
+                <div class="pm-column-title"></div>
+                <div id="pmMainList"></div>
+              </div>
+              <div class="pm-column pm-column-sub">
+                <div class="pm-column-title"></div>
+                <div id="pmSubList"></div>
+              </div>
+              <div class="pm-column pm-column-subsub">
+                <div class="pm-column-title">Detail</div>
+                <div id="pmSubSubList"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tab"><a href="game-plan.html" style="color: inherit; text-decoration: none;">Game Plan</a></div>
+      <div class="tab"><a href="post-event-analysis.html" style="color: inherit; text-decoration: none;">Post Event
+          Analysis</a></div>
+    </div>
+    <img src="assets/image 2023.png" alt="HGAC Logo" class="logo" />
+  </header>
+
+  <main>
+    <div class="grid">
+      <!-- Performance measure: Baseline Weekday / Baseline Weekend → WC Trips Flow Patterns: dropdown + single large image -->
+      <div id="pmWcTripFlowImages" class="map-card pm-wc-flow-panel" style="display: none;">
+        <div class="map-toolbar">
+          <div id="pmBreadcrumbWc" class="pm-breadcrumb">
+            <strong>Model Scenarios</strong>
+            <span id="pmBreadcrumbTrailWc"></span>
+          </div>
+        </div>
+        <div class="pm-wc-single">
+          <div class="pm-wc-single-controls">
+            <label for="pmWcSelect">Select WC trips view</label>
+            <select id="pmWcSelect">
+              <option value="wc_ingress">WC Event Trips – Ingress</option>
+              <option value="wc_egress">WC Event Trips – Egress</option>
+              <option value="fan_ingress">Fan Fest Trips – Ingress</option>
+              <option value="fan_egress">Fan Fest Trips – Egress</option>
+            </select>
+          </div>
+          <div class="pm-wc-single-image">
+            <img id="pmWcSingleImg" src="data/baseline_weekday/WC_trip_flow_pattern/trip_flow_WC_ingress.png"
+              alt="WC Event Trips – Ingress" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance measure: Baseline Weekday → Route Travel Time: dropdown + 3-column row -->
+      <div id="pmRouteTravelImages" class="map-card pm-wc-flow-panel" style="display: none;">
+        <div class="map-toolbar">
+          <div class="pm-breadcrumb">
+            <strong>Model Scenarios</strong>
+            <span id="pmBreadcrumbTrailRouteTravel"></span>
+          </div>
+        </div>
+        <div class="pm-wc-single-controls pm-route-controls">
+          <label for="pmRouteSelect">Select route</label>
+          <select id="pmRouteSelect">
+            <option value="1">Route 1 – Galleria to/from NRG</option>
+            <option value="2">Route 2 – Downtown to/from NRG</option>
+            <option value="3">Route 3 – Hobby Area to/from NRG</option>
+            <option value="4">Route 4 – Sharpstown to/from NRG</option>
+            <option value="5">Route 5 – Kempwood to/from NRG</option>
+          </select>
+        </div>
+        <div class="pm-route-travel-grid">
+          <!-- Row 1: 1a, 1b, 1c -->
+          <div class="pm-route-row" data-route="1">
+            <div class="pm-route-panel pm-route-panel-a">
+              <img id="pmRouteImg1a" src="data/baseline_weekday/route_travel_time/1a.png" alt="Route 1 – Route map" />
+            </div>
+            <div class="pm-route-right">
+              <div class="pm-route-panel pm-route-panel-b">
+                <img id="pmRouteImg1b" src="data/baseline_weekday/route_travel_time/1b.png"
+                  alt="Route 1 – Ingress travel time comparison" />
+              </div>
+              <div class="pm-route-panel pm-route-panel-c">
+                <img id="pmRouteImg1c" src="data/baseline_weekday/route_travel_time/1c.png"
+                  alt="Route 1 – Egress travel time comparison" />
+              </div>
+            </div>
+          </div>
+          <!-- Row 2: 2a, 2b, 2c -->
+          <div class="pm-route-row" data-route="2">
+            <div class="pm-route-panel pm-route-panel-a">
+              <img id="pmRouteImg2a" src="data/baseline_weekday/route_travel_time/2a.png" alt="Route 2 – Route map" />
+            </div>
+            <div class="pm-route-right">
+              <div class="pm-route-panel pm-route-panel-b">
+                <img id="pmRouteImg2b" src="data/baseline_weekday/route_travel_time/2b.png"
+                  alt="Route 2 – Ingress travel time comparison" />
+              </div>
+              <div class="pm-route-panel pm-route-panel-c">
+                <img id="pmRouteImg2c" src="data/baseline_weekday/route_travel_time/2c.png"
+                  alt="Route 2 – Egress travel time comparison" />
+              </div>
+            </div>
+          </div>
+          <!-- Row 3: 3a, 3b, 3c -->
+          <div class="pm-route-row" data-route="3">
+            <div class="pm-route-panel pm-route-panel-a">
+              <img id="pmRouteImg3a" src="data/baseline_weekday/route_travel_time/3a.png" alt="Route 3 – Route map" />
+            </div>
+            <div class="pm-route-right">
+              <div class="pm-route-panel pm-route-panel-b">
+                <img id="pmRouteImg3b" src="data/baseline_weekday/route_travel_time/3b.png"
+                  alt="Route 3 – Ingress travel time comparison" />
+              </div>
+              <div class="pm-route-panel pm-route-panel-c">
+                <img id="pmRouteImg3c" src="data/baseline_weekday/route_travel_time/3c.png"
+                  alt="Route 3 – Egress travel time comparison" />
+              </div>
+            </div>
+          </div>
+          <!-- Row 4: 4a, 4b, 4c -->
+          <div class="pm-route-row" data-route="4">
+            <div class="pm-route-panel pm-route-panel-a">
+              <img id="pmRouteImg4a" src="data/baseline_weekday/route_travel_time/4a.png" alt="Route 4 – Route map" />
+            </div>
+            <div class="pm-route-right">
+              <div class="pm-route-panel pm-route-panel-b">
+                <img id="pmRouteImg4b" src="data/baseline_weekday/route_travel_time/4b.png"
+                  alt="Route 4 – Ingress travel time comparison" />
+              </div>
+              <div class="pm-route-panel pm-route-panel-c">
+                <img id="pmRouteImg4c" src="data/baseline_weekday/route_travel_time/4c.png"
+                  alt="Route 4 – Egress travel time comparison" />
+              </div>
+            </div>
+          </div>
+          <!-- Row 5: 5a, 5b, 5c -->
+          <div class="pm-route-row" data-route="5">
+            <div class="pm-route-panel pm-route-panel-a">
+              <img id="pmRouteImg5a" src="data/baseline_weekday/route_travel_time/5a.png" alt="Route 5 – Route map" />
+            </div>
+            <div class="pm-route-right">
+              <div class="pm-route-panel pm-route-panel-b">
+                <img id="pmRouteImg5b" src="data/baseline_weekday/route_travel_time/5b.png"
+                  alt="Route 5 – Ingress travel time comparison" />
+              </div>
+              <div class="pm-route-panel pm-route-panel-c">
+                <img id="pmRouteImg5c" src="data/baseline_weekday/route_travel_time/5c.png"
+                  alt="Route 5 – Egress travel time comparison" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance measure: Baseline Weekday → Freeway-Bottlenecks -->
+      <div id="pmBottlenecks" class="map-card pm-wc-flow-panel" style="display: none;">
+        <div class="map-toolbar">
+          <div class="pm-breadcrumb">
+            <strong>Model Scenarios</strong>
+            <span id="pmBreadcrumbTrailBottlenecks"></span>
+          </div>
+        </div>
+        <div id="pmBottlenecksKeyMapView" class="pm-bottlenecks-key-view">
+          <div class="pm-bottlenecks-key-map-wrap">
+            <img id="pmBottlenecksKeyImg" src="data/baseline_weekday/bottlenecks/key map.png" alt="Bottlenecks key map"
+              class="pm-bottlenecks-key-img" />
+          </div>
+          <div class="pm-bottlenecks-routes">
+            <h3 class="pm-bottlenecks-routes-title">Route names</h3>
+            <ul class="pm-bottlenecks-route-list" id="pmBottlenecksRouteList">
+              <li><button type="button" class="pm-route-btn" data-route="1">1. I-610 West Loop (I-69 to S Post Oak
+                  Rd)</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="2">2. I-610 South Loop (S Post Oak Rd to Kirby
+                  Dr)</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="3">3. I-610 South Loop (Kirby Dr to Scott
+                  St)</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="4">4. SH 288 (I-610 South Loop to
+                  I-69)</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="5">5. I-610 West Loop (I-69 to Woodway
+                  Dr)</button></li>
+            </ul>
+          </div>
+        </div>
+        <div id="pmBottlenecksRouteDetailView" class="pm-bottlenecks-detail-view" style="display: none;">
+          <button type="button" class="pm-bottlenecks-back-btn" id="pmBottlenecksBackBtn">← Back to route list</button>
+          <h3 class="pm-bottlenecks-route-header" id="pmBottlenecksRouteHeader"></h3>
+          <div class="pm-bottlenecks-map-wrap">
+            <img id="pmBottlenecksImgA" src="" alt="" />
+          </div>
+          <div class="pm-bottlenecks-time-row">
+            <div class="pm-bottlenecks-slider-track">
+              <input type="range" id="pmBottlenecksTimeSlider" min="0" max="5" step="1" value="0" />
+              <div class="pm-bottlenecks-slider-ticks">
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+              </div>
+            </div>
+            <div class="pm-bottlenecks-time-labels" id="pmBottlenecksTimeLabels">
+              <span class="pm-time-label"><span class="pm-time-main">9:00</span><span
+                  class="pm-time-ampm">AM</span></span>
+              <span class="pm-time-label"><span class="pm-time-main">10:00</span><span
+                  class="pm-time-ampm">AM</span></span>
+              <span class="pm-time-label"><span class="pm-time-main">11:00</span><span
+                  class="pm-time-ampm">AM</span></span>
+              <span class="pm-time-label"><span class="pm-time-main">2:00</span><span
+                  class="pm-time-ampm">PM</span></span>
+              <span class="pm-time-label"><span class="pm-time-main">3:00</span><span
+                  class="pm-time-ampm">PM</span></span>
+              <span class="pm-time-label"><span class="pm-time-main">4:00</span><span
+                  class="pm-time-ampm">PM</span></span>
+            </div>
+          </div>
+          <div class="pm-bottlenecks-legend-wrap">
+            <img id="pmBottlenecksLegendImg" src="data/baseline_weekday/bottlenecks/legend.png" alt="Bottlenecks legend"
+              class="pm-bottlenecks-legend-img" />
+          </div>
+          <div id="pmBottlenecksCWrap" class="pm-bottlenecks-c-wrap">
+            <img id="pmBottlenecksImgC" src="" alt="" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance measure: Baseline Weekday → Key-Arterials -->
+      <div id="pmCorridorVolume" class="map-card pm-wc-flow-panel" style="display: none;">
+        <div class="map-toolbar">
+          <div class="pm-breadcrumb">
+            <strong>Model Scenarios</strong>
+            <span id="pmBreadcrumbTrailCorridor"></span>
+          </div>
+        </div>
+        <div id="pmCorridorKeyMapView" class="pm-bottlenecks-key-view">
+          <div class="pm-bottlenecks-key-map-wrap">
+            <img id="pmCorridorKeyImg" src="data/baseline_weekday/corridor_volume/key map.png"
+              alt="Key-Arterials key map" class="pm-bottlenecks-key-img" />
+          </div>
+          <div class="pm-bottlenecks-routes">
+            <h3 class="pm-bottlenecks-routes-title">Corridor names</h3>
+            <ul class="pm-bottlenecks-route-list" id="pmCorridorRouteList">
+              <li><button type="button" class="pm-route-btn" data-route="1">1. Main St</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="2">2. I-610 South Loop Frontage Rd</button>
+              </li>
+              <li><button type="button" class="pm-route-btn" data-route="3">3. Buffalo Speedway</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="4">4. Kirby Dr</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="5">5. Fannin St</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="6">6. Almeda Road</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="7">7. Greenbriar Dr</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="8">8. Cambridge St</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="9">9. Old Spanish Trl</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="10">10. W Bellfort Ave</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="11">11. N Braeswood Blvd</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="12">12. S Braeswood Blvd</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="13">13. Bellaire Blvd/ W Holcombe Blvd</button>
+              </li>
+              <li><button type="button" class="pm-route-btn" data-route="14">14. Holcombe Blvd</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="15">15. Harrisburg Blvd</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="16">16. Hirsch Rd</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="17">17. Scott St/York St</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="18">18. Elysian St</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="19">19. Emancipation Ave</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="20">20. Texas Ave</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="21">21. Congress St</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="22">22. Chartres St</button></li>
+              <li><button type="button" class="pm-route-btn" data-route="23">23. Caroline St</button></li>
+            </ul>
+          </div>
+        </div>
+        <div id="pmCorridorDetailView" class="pm-bottlenecks-detail-view" style="display: none;">
+          <button type="button" class="pm-bottlenecks-back-btn" id="pmCorridorBackBtn">← Back to corridor list</button>
+          <div class="pm-bottlenecks-detail-grid" id="pmCorridorDetailGrid">
+            <div class="pm-wc-flow-cell"><img id="pmCorridorImgA" src="" alt="" /></div>
+            <div class="pm-wc-flow-cell"><img id="pmCorridorImgB" src="" alt="" /></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance measure: Incident Scenarios – sticky left panel + scrollable images -->
+      <div id="pmIncidentImages" class="map-card pm-wc-flow-panel" style="display: none;">
+        <div class="map-toolbar">
+          <div class="pm-breadcrumb">
+            <strong>Model Scenarios</strong>
+            <span id="pmBreadcrumbTrailIncident"></span>
+          </div>
+        </div>
+        <div class="pm-incident-layout">
+          <aside class="pm-incident-panel">
+            <h3 class="pm-incident-title">⚠ Incident Scenario</h3>
+            <p class="pm-incident-text" id="pmIncidentText">
+              Incident Scenario 1 describes a major capacity reduction on the I-610 South Loop, affecting
+              game-day traffic approaching NRG Park.
+            </p>
+            <ul class="pm-incident-list" id="pmIncidentDetails">
+              <li>I-610 SB, south of I-69</li>
+              <li>Partial lane closures: 60% capacity reduction</li>
+              <li>Closure duration: 10:00 AM – 12:00 PM</li>
+            </ul>
+            <!-- <p class="pm-incident-footnote">
+              Switch between Incident Scenario 1, 2, and 3 in the Performance Measures menu to compare
+              different locations and diversion strategies.
+            </p> -->
+          </aside>
+          <div class="pm-incident-images">
+            <div class="pm-bottlenecks-detail-grid">
+              <div class="pm-wc-flow-cell"><img id="pmIncidentImgA" src="" alt="" /></div>
+              <div class="pm-wc-flow-cell"><img id="pmIncidentImgB" src="" alt="" /></div>
+              <div class="pm-wc-flow-cell"><img id="pmIncidentImgC" src="" alt="" /></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Default content: map, charts, route selectors -->
+      <div id="pmDefaultContent" class="map-card">
+        <div class="map-toolbar">
+          <div id="pmBreadcrumb" class="pm-breadcrumb">
+            <strong>Model Scenarios</strong>
+            <span id="pmBreadcrumbTrail"></span>
+          </div>
+        </div>
+
+        <iframe id="mapFrame" class="map"
+          src="https://felt.com/embed/map/Weekday-Baseline-Scenario-ISglh3tVSYq77SCNvd7ZID?loc=40.402,-111.859,14z"></iframe>
+
+        <!-- Analysis cards aligned with bottom of map -->
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:16px">
+          <div class="card">
+            <div class="hd">Arrival Profile Analysis</div>
+            <div class="bd" style="position: relative;"><svg id="arrivalChart" class="chart"></svg></div>
+          </div>
+          <div class="card">
+            <div class="hd">Departure Profile Analysis</div>
+            <div class="bd" style="position: relative;"><svg id="departureChart" class="chart"></svg></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stack" id="pmDefaultStack">
+        <div class="card">
+          <div class="hd">Hourly Travel Time Reliability for Key Routes</div>
+          <div class="bd">
+            <div
+              style="display:grid; gap:16px; padding:14px 16px; grid-template-columns: repeat(3, minmax(200px,1fr)); align-items:end; background:#fff; border-radius:12px; border:1px solid rgba(91,108,248,0.1); box-shadow:0 2px 8px rgba(91,108,248,0.06);">
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <label for="originSelect" style="font-weight:700; font-size:14px; color:#5b6cf8;">Origin</label>
+                <select id="originSelect"
+                  style="padding:10px 16px; border:2px solid rgba(91,108,248,0.3); border-radius:999px; font-size:14px; font-weight:600; background:#fff; color:#20263a; cursor:pointer; transition:border-color 0.2s ease, box-shadow 0.2s ease;">
+                  <option value="">Select Origin</option>
+                </select>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <label for="destinationSelect"
+                  style="font-weight:700; font-size:14px; color:#5b6cf8;">Destination</label>
+                <select id="destinationSelect"
+                  style="padding:10px 16px; border:2px solid rgba(91,108,248,0.3); border-radius:999px; font-size:14px; font-weight:600; background:#fff; color:#20263a; cursor:pointer; transition:border-color 0.2s ease, box-shadow 0.2s ease;">
+                  <option value="">Select Destination</option>
+                </select>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <label for="hourSelect" style="font-weight:700; font-size:14px; color:#5b6cf8;">Hour</label>
+                <select id="hourSelect"
+                  style="padding:10px 16px; border:2px solid rgba(91,108,248,0.3); border-radius:999px; font-size:14px; font-weight:600; background:#fff; color:#20263a; cursor:pointer; transition:border-color 0.2s ease, box-shadow 0.2s ease;">
+                  <option value="">Select Hour</option>
+                </select>
+              </div>
+            </div>
+            <div id="routeResults" style="padding:10px; overflow:auto;">
+              <div style="text-align:center; color:#6b7280; padding:20px; font-size:15px;">Select origin, destination,
+                and hour to view
+                scenario performance.</div>
+            </div>
+            <div id="routeMap"
+              style="margin-top:16px; height:300px; border:1px solid rgba(91,108,248,0.1); border-radius:12px; display:none; overflow:hidden;">
+              <div
+                style="padding:12px 16px; background:linear-gradient(90deg,#f8faff,#eef2ff); border-bottom:1px solid rgba(91,108,248,0.1); font-weight:700; color:#5b6cf8; font-size:14px;">
+                Route Map
+              </div>
+              <div id="mapContainer"
+                style="height:260px; background:#fff; display:flex; align-items:center; justify-content:center; color:#6b7280; font-size:14px;">
+                Select a route to view map
+              </div>
+            </div>
+            <div id="ridershipTable" style="margin-top:16px; display:none;">
+              <div class="card">
+                <div class="hd">Transit Ridership by Mode</div>
+                <div class="bd">
+                  <div id="ridershipTableContent" style="padding:10px;">
+                    <p style="text-align:center; color:#666;">Loading ridership data...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- <div class="bd">
+            <p>Under Development</p>
+          </div> -->
+
+
+      </div>
+
+
+      <!-- <div class="card" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
+          <div>
+            <div class="hd" style="border-right: 1px solid #eee;">Performance Metrics</div>
+            <div class="bd" style="border-right: 1px solid #eee;">
+              <div id="trafficFlowData">
+                <p style="text-align: center; color: #666; padding: 20px;">Loading traffic flow data...</p>
+              </div>
+            </div>
+
+            <!-- <div class="bd">
+              <p>Under Development</p>
+            </div> -->
+
+      <!-- </div>
+          <div>
+            <div class="hd">Performance Metrics</div>
+            <div class="bd">
+              <p>Transit Share: 22%</p>
+              <p>Active Share: 7%</p>
+              <p>Walk Edge Time: 50 mins</p>
+              <!-- <p>Under Development</p> -->
+    </div>
+    </div>
+    </div>
+    </div>
+
+    <!-- Baseline map iframe content -->
+    <div id="pmBaselineIframeContent" class="map-card pm-baseline-iframe-card" style="display:none;">
+      <div class="map-toolbar">
+        <div class="pm-breadcrumb">
+          <strong>Model Scenarios</strong>
+          <span id="pmBaselineIframeBreadcrumb" style="margin-left:4px; color:var(--muted); font-weight:500;"></span>
+        </div>
+      </div>
+      <div class="pm-baseline-iframe-wrap">
+        <iframe id="pmBaselineIframe" class="pm-baseline-iframe" title="Baseline scenario map" loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <!-- TDM Scenario content -->
+    <div id="pmTdmContent" class="map-card pm-tdm-card" style="display:none;">
+      <div class="map-toolbar">
+        <div class="pm-breadcrumb">
+          <strong>Model Scenarios</strong>
+          <span style="margin-left:4px; color:var(--muted); font-weight:500;">TDM Scenario</span>
+        </div>
+      </div>
+
+      <div style="padding:20px; display:flex; flex-direction:column; gap:24px;">
+        <div class="pm-tdm-layout">
+          <nav class="pm-tdm-tabs">
+            <button type="button" class="pm-tdm-tab pm-tdm-tab-active" data-tdm-tab-button="overview">Travel Demand
+              Management (TDM)</button>
+            <button type="button" class="pm-tdm-tab" data-tdm-tab-button="mobility">Mobility in the Region</button>
+            <button type="button" class="pm-tdm-tab" data-tdm-tab-button="why">Why TDM</button>
+            <button type="button" class="pm-tdm-tab" data-tdm-tab-button="strategy">Recommended TDM Strategy</button>
+            <button type="button" class="pm-tdm-tab" data-tdm-tab-button="model">TDM Model Scenario</button>
+            <button type="button" class="pm-tdm-tab" data-tdm-tab-button="speed">Link-Level Speed</button>
+            <button type="button" class="pm-tdm-tab" data-tdm-tab-button="od">Origin–Destination Travel Time
+              Results</button>
+            <button type="button" class="pm-tdm-tab" data-tdm-tab-button="vmtvht">Subarea Network VMT and VHT</button>
+            <button type="button" class="pm-tdm-tab" data-tdm-tab-button="summary">TDM Scenario Summary</button>
+          </nav>
+          <div class="pm-tdm-panels">
+            <!-- 1. Travel Demand Management (TDM) -->
+            <div class="pm-tdm-panel pm-tdm-panel-active" data-tdm-tab="overview">
+              <section>
+                <h3 style="margin:0 0 8px; font-size:1.25rem;">Travel Demand Management (TDM)</h3>
+                <p style="margin:0 0 8px; line-height:1.6; color:var(--muted);">
+                  Travel Demand Management (TDM) is a coordinated package of strategies that reduces and reshapes
+                  background
+                  travel demand so that the roadway, transit, and active transportation networks can absorb World Cup
+                  trips
+                  while maintaining a level of service similar to a typical day.
+                </p>
+              </section>
+
+              <section>
+                <h4 style="margin:0 0 6px;">How TDM Works</h4>
+                <div
+                  style="display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,2fr);gap:18px;align-items:center;">
+                  <div style="display:flex;justify-content:center;">
+                    <img id="pmTdmHexImg" src="data/TDM Scenario/TDM image.png" alt="TDM strategy hexagon diagram"
+                      style="max-width:340px;width:100%;height:auto;display:block;cursor:pointer;" />
+                  </div>
+                  <ul
+                    style="margin:0; padding-left:1.2rem; display:flex; flex-direction:column; gap:4px; color:var(--muted);">
+                    <li><strong>Work From Home</strong> – Telecommuting eliminates the daily commute trip entirely,
+                      providing the single largest lever for reducing peak period vehicle demand.</li>
+                    <li><strong>Flexible Timing</strong> – Staggering start and end times spreads demand across the day,
+                      reducing the sharp spike that creates gridlock during peak windows.</li>
+                    <li><strong>Avoid Busy Areas</strong> – Routing around congestion hotspots like Downtown, NRG
+                      Stadium, and the Galleria distributes vehicle loads more evenly across the network.</li>
+                    <li><strong>Alternative Modes</strong> – Public transit, carpooling, biking, and walking move more
+                      people per lane — reducing vehicle trips while maintaining overall mobility.</li>
+                    <li><strong>Plan Ahead</strong> – Advance trip planning using real-time data allows travelers to
+                      choose optimal routes, modes, and departure times.</li>
+                    <li><strong>Make Fewer Trips</strong> – Combining errands, trip chaining, and online alternatives
+                      reduce the total number of vehicle trips generated.</li>
+                  </ul>
+                </div>
+              </section>
+            </div>
+
+            <!-- 2. Mobility in the Region -->
+            <div class="pm-tdm-panel" data-tdm-tab="mobility">
+              <section>
+                <h4 style="margin:0 0 6px;">Mobility in the Region</h4>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px;">
+                  <div class="card" style="margin:0;">
+                    <div class="hd">Houston Today</div>
+                    <div class="bd">
+                      <ul
+                        style="margin:0; padding-left:1.2rem; display:flex; flex-direction:column; gap:4px; color:var(--muted);">
+                        <li>One of the most developed highway transportation systems in the world.</li>
+                        <li>Serves 2.84 million households (8-county estimate for 2026).</li>
+                        <li>27.3 million person trips and 21.7 million vehicle trips on a typical weekday.</li>
+                        <li>200 million vehicle miles traveled daily.</li>
+                        <li>High recurring congestion on I-610, BW 8, I-10, I-45, I-69, SH 288, US 290 &amp; SH 6.</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="card" style="margin:0;">
+                    <div class="hd">FIFA World Cup Impact</div>
+                    <div class="bd">
+                      <ul
+                        style="margin:0; padding-left:1.2rem; display:flex; flex-direction:column; gap:4px; color:var(--muted);">
+                        <li>Thousands of international and domestic visitors arriving, staying, and departing during the
+                          event.</li>
+                        <li>Increased traffic in and around NRG Stadium, Fan Fest, airports and tourist hotspots
+                          (Downtown, Galleria, NASA).</li>
+                        <li>High demand for hotels, restaurants, flights, transit, and rideshare.</li>
+                        <li>World Cup demand overlaps directly with the region's highest congestion areas.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </section>
+              <section>
+                <h4 style="margin:12px 0 6px;">Regional Mobility Map</h4>
+                <div class="card" style="margin:0;">
+                  <div class="bd">
+                    <img id="pmTdmRegionalMap" src="data/TDM Scenario/regional_map.png"
+                      alt="Regional mobility map for the TDM scenario"
+                      style="width:100%;max-height:360px;object-fit:contain;display:block;border-radius:10px;cursor:pointer;" />
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <!-- 3. Why TDM -->
+            <div class="pm-tdm-panel" data-tdm-tab="why">
+              <section>
+                <h4 style="margin:0 0 6px;">Why TDM</h4>
+                <p style="margin:0 0 6px; line-height:1.6; color:var(--muted);">
+                  As any Houstonian knows, it does not take much for traffic to break down during peak hours on key
+                  roadways on a typical day.
+                  During FIFA World Cup, an already saturated transportation system will experience significant
+                  additional demand.
+                  Effective TDM can help reduce background traffic so the system handles World Cup demand at a similar
+                  level of service as a typical day.
+                </p>
+                <h5 style="margin:8px 0 4px; font-size:0.95rem;">TDM Benefits</h5>
+                <ul
+                  style="margin:0; padding-left:1.2rem; display:flex; flex-direction:column; gap:4px; color:var(--muted);">
+                  <li><strong>Reduce Peak Period Congestion</strong> – Lowers vehicle demand during both peak and
+                    peak-shoulder periods, creating measurable relief on the most congested corridors.</li>
+                  <li><strong>Improve Travel Time Reliability</strong> – Especially critical before game start
+                    (9:00–11:00 AM) and after game end (2:00–4:00 PM) when most event trips occur.</li>
+                  <li><strong>Reduce Congestion at Fan Fest</strong> – Decreases vehicle trips and parking pressure in
+                    Downtown and EaDo during Fan Festival activities.</li>
+                  <li><strong>Buffer for Non-Recurring Events</strong> – Creates headroom to absorb incidents,
+                    accidents, and weather-related disruptions.</li>
+                </ul>
+              </section>
+            </div>
+
+            <!-- 4. Recommended TDM Strategy -->
+            <div class="pm-tdm-panel" data-tdm-tab="strategy">
+              <section>
+                <h4 style="margin:0 0 6px;">Recommended TDM Strategy</h4>
+                <div
+                  style="display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:16px; align-items:flex-start;">
+                  <div>
+                    <ol
+                      style="margin:0; padding-left:1.4rem; display:flex; flex-direction:column; gap:4px; color:var(--muted);">
+                      <li><strong>Keep the excitement alive.</strong> Messaging must maintain the thrill of the World
+                        Cup — never create panic or anxiety about travel conditions.</li>
+                      <li><strong>Communication is the key.</strong> Keep people informed so they can make good
+                        decisions, with timely information to nudge behavior in the right direction.</li>
+                      <li><strong>Use personas to simplify.</strong> Example: “If you are a resident in Katy who wants
+                        to visit Fan Fest, here is what you need to know.”</li>
+                      <li><strong>Target significant trip reduction.</strong> Effective TDM needs especially strong
+                        results inside and around I-610, with a goal of 5–10% reduction in total daily trips.</li>
+                      <li><strong>Smart commute options.</strong> Coordinate with Game Plan — Commute Solutions for
+                        employer engagement and carpool/transit incentive programs.</li>
+                    </ol>
+                  </div>
+                  <div class="card" style="margin:0;">
+                    <div class="hd">Target Groups for TDM Outreach</div>
+                    <div class="bd">
+                      <ul
+                        style="margin:0; padding-left:1.2rem; display:flex; flex-direction:column; gap:4px; color:var(--muted);">
+                        <li><strong>Flexible Residents &amp; Workers</strong> – Can adjust travel times or routes based
+                          on accurate, timely information.</li>
+                        <li><strong>Event-Related Travellers</strong> – Visitors and local participants generating extra
+                          demand; can be guided to optimal arrival windows and modes.</li>
+                        <li><strong>Fixed Schedule Commuters</strong> – Cannot change or delay trips; benefit from route
+                          guidance and transit alternatives.</li>
+                        <li><strong>Essential Service Providers</strong> – Must travel to deliver critical services;
+                          require priority routing and real-time incident information.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <!-- 5. TDM Model Scenario -->
+            <div class="pm-tdm-panel" data-tdm-tab="model">
+              <section>
+                <h4 style="margin:0 0 6px;">TDM Model Scenario</h4>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px;">
+                  <!-- <div class="card" style="margin:0;">
+                    <div class="bd">
+                      <h5 style="margin:0 0 4px; font-size:0.95rem;">Baseline Scenario</h5>
+                      <p style="margin:0; color:var(--muted);">Typical weekday trips combined with additional game day
+                        trips to NRG Stadium and Fan Fest. Represents the “do nothing” case — business as usual with
+                        World Cup overlay.</p>
+                    </div>
+                  </div> -->
+                  <div class="card" style="margin:0;">
+                    <div class="bd">
+                      <h5 style="margin:0 0 4px; font-size:0.95rem;">TDM Scenario</h5>
+                      <p style="margin:0; color:var(--muted);">A 20% reduction applied to home-based work trips inside
+                        BW 8, focused solely on telecommuting. Both scenarios were modeled in the H-GAC regional travel
+                        demand model.</p>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:8px;">
+                  <div class="card" style="margin:0;">
+                    <div class="bd">
+                      <div style="font-size:1.8rem; font-weight:700;">20%</div>
+                      <div style="font-weight:600;">Reduction in HBW Trips</div>
+                      <p style="margin:4px 0 0; color:var(--muted);">Home-based work trips where destination is inside
+                        BW 8, excluding Texas Medical Center.</p>
+                    </div>
+                  </div>
+                  <div class="card" style="margin:0;">
+                    <div class="bd">
+                      <div style="font-size:1.8rem; font-weight:700;">1,760</div>
+                      <div style="font-weight:600;">Traffic Analysis Zones</div>
+                      <p style="margin:4px 0 0; color:var(--muted);">Out of 5,217 regional TAZs — representing
+                        approximately 40% of total regional employment.</p>
+                    </div>
+                  </div>
+                  <div class="card" style="margin:0;">
+                    <div class="bd">
+                      <div style="font-size:1.8rem; font-weight:700;">40%</div>
+                      <div style="font-weight:600;">Regional Employment Covered</div>
+                      <p style="margin:4px 0 0; color:var(--muted);">Selected TAZs inside BW 8 represent the
+                        highest-density employment core of the region.</p>
+                    </div>
+                  </div>
+                </div>
+                <!-- <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px;">
+                  <div class="card" style="margin:0;">
+                    <div class="bd">
+                      <h5 style="margin:0 0 4px; font-size:0.95rem;">Baseline Scenario</h5>
+                      <p style="margin:0; color:var(--muted);">Typical weekday trips combined with additional game day
+                        trips to NRG Stadium and Fan Fest. Represents the “do nothing” case — business as usual with
+                        World Cup overlay.</p>
+                    </div>
+                  </div>
+                  <div class="card" style="margin:0;">
+                    <div class="bd">
+                      <h5 style="margin:0 0 4px; font-size:0.95rem;">TDM Scenario</h5>
+                      <p style="margin:0; color:var(--muted);">A 20% reduction applied to home-based work trips inside
+                        BW 8, focused solely on telecommuting. Both scenarios were modeled in the H-GAC regional travel
+                        demand model.</p>
+                    </div>
+                  </div>
+                </div> -->
+              </section>
+              <section>
+                <h4 style="margin:12px 0 6px;">TDM Model Map</h4>
+                <div class="card" style="margin:0;">
+                  <div class="bd">
+                    <img id="pmTdmModelMap" src="data/TDM Scenario/TDM_model_map.png"
+                      alt="TDM model scenario map"
+                      style="width:100%;max-height:360px;object-fit:contain;display:block;border-radius:10px;cursor:pointer;" />
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <!-- 6. Link-Level Speed -->
+            <div class="pm-tdm-panel" data-tdm-tab="speed">
+              <section>
+                <h4 style="margin:0 0 6px;">Link-Level Speed</h4>
+                <div
+                  style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; align-items:flex-start;">
+                  <div class="card" style="margin:0;">
+                    <div class="bd">
+                      <img id="pmTdmMapAm" src="data/TDM Scenario/map 1.png"
+                        alt="AM peak period link-level speed change map"
+                        style="width:100%;height:auto;display:block;border-radius:8px;cursor:pointer;" />
+                      <div style="margin-top:6px;font-size:0.85rem;color:var(--muted);font-weight:500;">AM Speed Change
+                        – % Improvement (6 AM – 9 AM)</div>
+                    </div>
+                  </div>
+                  <div class="card" style="margin:0;">
+                    <div class="bd">
+                      <img id="pmTdmMapPm" src="data/TDM Scenario/map 2.png"
+                        alt="PM peak period link-level speed change map"
+                        style="width:100%;height:auto;display:block;border-radius:8px;cursor:pointer;" />
+                      <div style="margin-top:6px;font-size:0.85rem;color:var(--muted);font-weight:500;">PM Speed Change
+                        – % Improvement (4 PM – 7 PM)</div>
+                    </div>
+                  </div>
+                </div>
+                <p style="margin:8px 0 0; line-height:1.6; color:var(--muted);">
+                  The two figures show AM peak period (6 AM – 9 AM) and PM peak period (4 PM – 7 PM) average speed
+                  change at link level
+                  in the TDM scenario versus the baseline scenario. Most key roadways with recurring congestion show
+                  overall improvement
+                  of 5%–10% or more. In AM and PM peak hours, these should translate to average speed improvements of
+                  10%–15% or more.
+                </p>
+              </section>
+            </div>
+
+            <!-- 7. Origin–Destination Travel Time Results (incl. Key OD Routes) -->
+            <div class="pm-tdm-panel" data-tdm-tab="od">
+              <section>
+                <h4 style="margin:0 0 6px;">Origin–Destination Travel Time Results</h4>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px;">
+                  <div class="card" style="margin:0; overflow:auto;">
+                    <div class="bd">
+                      <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                        <caption style="caption-side:top; font-weight:600; margin-bottom:4px; text-align:left;">
+                          AM Peak Period (6 AM – 9 AM) — Average Inbound Travel Time
+                        </caption>
+                        <thead>
+                          <tr>
+                            <th>Route</th>
+                            <th>Origin</th>
+                            <th>Destination</th>
+                            <th>Baseline</th>
+                            <th>TDM</th>
+                            <th>Savings</th>
+                            <th>Improv.</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>I-69</td>
+                            <td>Sugar Land</td>
+                            <td>Downtown</td>
+                            <td>34.9 min</td>
+                            <td>33.3 min</td>
+                            <td>1.6 min</td>
+                            <td>5%</td>
+                          </tr>
+                          <tr>
+                            <td>Westpark Tollway &amp; I-69</td>
+                            <td>Alief</td>
+                            <td>Downtown</td>
+                            <td>26.6 min</td>
+                            <td>25.1 min</td>
+                            <td>1.5 min</td>
+                            <td>6%</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div class="card" style="margin:0; overflow:auto;">
+                    <div class="bd">
+                      <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                        <caption style="caption-side:top; font-weight:600; margin-bottom:4px; text-align:left;">
+                          PM Peak Period (3 PM – 7 PM) — Average Outbound Travel Time
+                        </caption>
+                        <thead>
+                          <tr>
+                            <th>Route</th>
+                            <th>Origin</th>
+                            <th>Destination</th>
+                            <th>Baseline</th>
+                            <th>TDM</th>
+                            <th>Savings</th>
+                            <th>Improv.</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>I-69</td>
+                            <td>Downtown</td>
+                            <td>Sugar Land</td>
+                            <td>42.0 min</td>
+                            <td>40.3 min</td>
+                            <td>1.8 min</td>
+                            <td>4%</td>
+                          </tr>
+                          <tr>
+                            <td>Westpark Tollway &amp; I-69</td>
+                            <td>Downtown</td>
+                            <td>Alief</td>
+                            <td>32.4 min</td>
+                            <td>30.7 min</td>
+                            <td>1.6 min</td>
+                            <td>5%</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <h4 style="margin:12px 0 6px;">Key OD Routes</h4>
+                <div class="card" style="margin:0;">
+                  <div class="bd">
+                    <img id="pmTdmOdMap" src="data/TDM Scenario/OD travel Time.png"
+                      alt="Representative OD routes between Sugar Land, Alief, and Downtown"
+                      style="width:100%;max-height:360px;object-fit:contain;display:block;border-radius:10px;cursor:pointer;" />
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <!-- 8. Subarea Network VMT and VHT -->
+            <div class="pm-tdm-panel" data-tdm-tab="vmtvht">
+              <section>
+                <h4 style="margin:0 0 6px;">Subarea Network VMT and VHT</h4>
+                <div class="card" style="margin:0;">
+                  <div class="bd">
+                    <img id="pmTdmVmtVht" src="data/TDM Scenario/baseline vs tdm.png.jpg"
+                      alt="Baseline vs. TDM Scenario: Reduction in VMT and VHT"
+                      style="width:100%;max-height:360px;object-fit:contain;display:block;border-radius:10px;cursor:pointer;background:#F3F8FF;" />
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <!-- 9. TDM Scenario Summary -->
+            <div class="pm-tdm-panel" data-tdm-tab="summary">
+              <section>
+                <h4 style="margin:0 0 6px;">TDM Scenario Summary</h4>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px;">
+                  <div class="card" style="margin:0;">
+                    <div class="bd">
+                      <div style="font-size:1.5rem; font-weight:700;">9%</div>
+                      <p style="margin:4px 0 0; color:var(--muted);">Average travel time improvement on and inside I-610
+                        during the AM peak period.</p>
+                    </div>
+                  </div>
+                  <div class="card" style="margin:0;">
+                    <div class="bd">
+                      <div style="font-size:1.5rem; font-weight:700;">6%</div>
+                      <p style="margin:4px 0 0; color:var(--muted);">Average travel time improvement on and inside I-610
+                        during the PM peak period.</p>
+                    </div>
+                  </div>
+                  <div class="card" style="margin:0;">
+                    <div class="bd">
+                      <div style="font-size:1.5rem; font-weight:700;">25%</div>
+                      <p style="margin:4px 0 0; color:var(--muted);">For peak hour and severely congested routes, travel
+                        time savings can be as high as 25%.</p>
+                    </div>
+                  </div>
+                  <div class="card" style="margin:0;">
+                    <div class="bd">
+                      <div style="font-size:1.5rem; font-weight:700;">5–10%</div>
+                      <p style="margin:4px 0 0; color:var(--muted);">Most key roadways with recurring congestion show a
+                        speed improvement of 5–10% or more across peak periods.</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transit Scenario content (moved from Supply Inputs → Transit Service) -->
+    <div id="pmTransitContent" class="map-card" style="display:none;height:auto;">
+      <div class="map-toolbar">
+        <div class="pm-breadcrumb">
+          <strong>Model Scenarios</strong>
+          <span style="margin-left:4px; color:var(--muted); font-weight:500;">Transit Scenario</span>
+        </div>
+      </div>
+      <div style="padding:20px;">
+        <!-- SECTION: TRANSIT SERVICE (unchanged markup/IDs from tmp-scenario.html) -->
+        <div class="section" id="transitServiceSection" style="display: none;">
+          <h2 style="margin: 0 0 16px 0; font-size: 22px; color: var(--ink);">Transit Service</h2>
+
+          <!-- HOLISTIC TRANSIT OUTLOOK -->
+          <div class="card" style="margin-bottom: 20px;">
+            <div class="hd">Holistic Transit Outlook</div>
+            <div class="bd">
+              <p class="profile-note">Set the utilization for each transit service location.</p>
+
+              <!-- Map and Transit Categories Side by Side -->
+              <div class="control-row" style="margin-bottom: 30px;">
+                <!-- Transit Supply Map (Left) -->
+                <div style="flex: 0 0 50%;">
+                  <div id="transitSupplyMap" style="height: 700px; border-radius: var(--radius);"></div>
+                </div>
+
+                <!-- Transit Categories Stacked (Right) -->
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 12px;">
+                  <!-- Category 1: First / Last Mile -->
+                  <div class="control-group"
+                    style="background: var(--panel); padding: 10px; border-radius: var(--radius);">
+                    <h3
+                      style="margin: 0 0 12px 0; font-size: 16px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 8px;">
+                      <span
+                        style="display: inline-block; width: 12px; height: 12px; background-color: #f59e0b; border-radius: 2px;"></span>
+                      First / Last Mile
+                    </h3>
+                    <div style="margin-bottom: 12px; font-size: 13px; color: var(--muted); line-height: 1.5;">
+                      <strong>Locations:</strong> Texas Medical Center, Rice University Stadium, Fannin South Station
+                      P&amp;R (1,500 spaces)
+                    </div>
+                    <div style="margin-bottom: 16px; font-size: 13px; color: var(--muted); line-height: 1.5;">
+                      <strong>Service:</strong> Red Line for first &amp; last mile. Direct shuttles to stadium from TMC
+                      &amp; Rice Univ.
+                    </div>
+                    <label class="control-label">Utilization (Target: 10,000)</label>
+                    <input type="range" id="holistic_firstlast" class="slider" min="0" max="12000" step="200"
+                      value="5000">
+                    <div class="slider-value"><span id="holistic_firstlastValue">5,000</span> total trips</div>
+                  </div>
+
+                  <!-- Category 2: High Visitor Locations -->
+                  <div class="control-group"
+                    style="background: var(--panel); padding: 10px; border-radius: var(--radius);">
+                    <h3
+                      style="margin: 0 0 12px 0; font-size: 16px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 8px;">
+                      <span
+                        style="display: inline-block; width: 12px; height: 12px; background-color: #ef4444; border-radius: 2px;"></span>
+                      High Visitor Locations
+                    </h3>
+                    <div style="margin-bottom: 12px; font-size: 13px; color: var(--muted); line-height: 1.5;">
+                      <strong>Locations:</strong> Downtown, Galleria, Fan Fest
+                    </div>
+                    <div style="margin-bottom: 16px; font-size: 13px; color: var(--muted); line-height: 1.5;">
+                      <strong>Service:</strong> Direct shuttles from hotels. Some on Red Line plus existing local bus.
+                      Some on private shuttles.
+                    </div>
+                    <label class="control-label">Utilization (Target: 8,000)</label>
+                    <input type="range" id="holistic_highvisitor" class="slider" min="0" max="10000" step="200"
+                      value="5000">
+                    <div class="slider-value"><span id="holistic_highvisitorValue">5,000</span> total trips</div>
+                  </div>
+
+                  <!-- Category 3: Park & Ride Locations -->
+                  <div class="control-group"
+                    style="background: var(--panel); padding: 10px; border-radius: var(--radius);">
+                    <h3
+                      style="margin: 0 0 12px 0; font-size: 16px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 8px;">
+                      <span
+                        style="display: inline-block; width: 12px; height: 12px; background-color: #22c55e; border-radius: 2px;"></span>
+                      Park &amp; Ride Locations
+                    </h3>
+                    <div style="margin-bottom: 12px; font-size: 13px; color: var(--muted); line-height: 1.5;">
+                      <strong>Locations:</strong> West Loop TC (772 spaces), Hillcroft P&amp;R (922 spaces), West
+                      Bellfort P&amp;R (2,024 spaces), Tidwell TC (809 spaces), Westchase P&amp;R (1,468 spaces), Butler
+                      Stadium, Barnett, Delmar
+                    </div>
+                    <div style="margin-bottom: 16px; font-size: 13px; color: var(--muted); line-height: 1.5;">
+                      <strong>Service:</strong> Houston METRO. Regional Transit + ISD.
+                    </div>
+                    <label class="control-label">Utilization (Target: 6,000)</label>
+                    <input type="range" id="holistic_parkride" class="slider" min="0" max="10000" step="200"
+                      value="5000">
+                    <div class="slider-value"><span id="holistic_parkrideValue">5,000</span> total trips</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section-divider"></div>
+
+              <!-- Total Holistic Utilization Display -->
+              <div style="background: var(--panel); padding: 20px; border-radius: var(--radius); text-align: center;">
+                <div style="font-size: 14px; font-weight: 600; color: var(--muted); margin-bottom: 8px;">
+                  Total Holistic Transit Utilization
+                </div>
+                <div style="font-size: 32px; font-weight: 700; color: var(--accent);">
+                  <span id="totalHolisticCapacity">15,000</span>
+                </div>
+                <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">
+                  total trips (Target: 24,000)
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- <div class="card" style="margin-bottom: 20px;">
+            <div class="hd">Regional Transit Agencies</div>
+            <!-- <div class="bd">
+              <!-- <p class="profile-note">Set the utilization for each transit agency, excluding Houston Metro.</p> -->
+
+          <!-- Side-by-side layout: Map on left, Sliders on right -->
+          <!-- <div style="display: flex; gap: 30px; margin-bottom: 30px;"> -->
+          <!-- METRO Rail Map (Left) -->
+          <!-- <div style="flex: 0 0 50%;">
+                    <iframe
+                      src="https://map.ridemetro.org/#sRail"
+                      style="width: 100%; height: 700px; border: 1px solid var(--border); border-radius: var(--radius);"
+                      title="Houston METRO Rail Map">
+                    </iframe>
+                  </div> -->
+
+          <!-- Transit Agency Sliders (Right) - Container for sliders and total -->
+          <!-- <div style="flex: 1; display: flex; flex-direction: column; gap: 20px;"> -->
+          <!-- Sliders Grid -->
+          <!-- <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                    <!-- Row 1 -->
+          <!-- <div class="control-group">
+                      <label class="control-label">Galveston Island Transit</label>
+                      <input type="range" id="transit_galveston" class="slider" min="0" max="500" step="50" value="250">
+                      <div class="slider-value"><span id="transit_galvestonValue">250</span> total trips</div>
+                    </div> -->
+
+          <!-- <div class="control-group">
+                      <label class="control-label">Harris County Transit</label>
+                      <input type="range" id="transit_harris" class="slider" min="0" max="500" step="50" value="250">
+                      <div class="slider-value"><span id="transit_harrisValue">250</span> total trips</div>
+                    </div> -->
+
+          <!-- Row 2 -->
+          <!-- <div class="control-group">
+                      <label class="control-label">Brazos Transit</label>
+                      <input type="range" id="transit_brazos" class="slider" min="0" max="500" step="50" value="250">
+                      <div class="slider-value"><span id="transit_brazosValue">250</span> total trips</div>
+                    </div> -->
+
+          <!-- <div class="control-group">
+                      <label class="control-label">Conroe Transit</label>
+                      <input type="range" id="transit_conroe" class="slider" min="0" max="500" step="50" value="250">
+                      <div class="slider-value"><span id="transit_conroeValue">250</span> total trips</div>
+                    </div> -->
+
+          <!-- <div class="control-group">
+                      <label class="control-label">Colorado Valley Transit</label>
+                      <input type="range" id="transit_colorado" class="slider" min="0" max="500" step="50" value="250">
+                      <div class="slider-value"><span id="transit_coloradoValue">250</span> total trips</div>
+                    </div> -->
+
+          <!-- Row 3 -->
+          <!-- <div class="control-group">
+                      <label class="control-label">Gulf Coast Transit District</label>
+                      <input type="range" id="transit_gulfcoast" class="slider" min="0" max="500" step="50" value="250">
+                      <div class="slider-value"><span id="transit_gulfcoastValue">250</span> total trips</div>
+                    </div> -->
+
+          <!-- <div class="control-group">
+                      <label class="control-label">Fort Bend Transit</label>
+                      <input type="range" id="transit_fortbend" class="slider" min="0" max="500" step="50" value="250">
+                      <div class="slider-value"><span id="transit_fortbendValue">250</span> total trips</div>
+                    </div> -->
+
+          <!-- <div class="control-group">
+                      <label class="control-label">Woodlands Township</label>
+                      <input type="range" id="transit_woodlands" class="slider" min="0" max="500" step="50" value="250">
+                      <div class="slider-value"><span id="transit_woodlandsValue">250</span> total trips</div>
+                    </div> -->
+          <!-- </div> --> -->
+
+          <!-- Total Utilization Display -->
+          <!-- <div style="background: var(--panel); padding: 20px; border-radius: var(--radius); text-align: center;">
+                  <!-- <div style="font-size: 14px; font-weight: 600; color: var(--muted); margin-bottom: 8px;">
+                    Total Trips Using Regional Transit
+                  </div> -->
+          <!-- <div style="font-size: 32px; font-weight: 700; color: var(--accent);">
+                    <span id="totalTransitCapacity">2,000</span>
+                  </div> -->
+          <!-- <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">
+                    total trips
+                  </div> -->
+          <!-- </div> -->
+          <!-- </div> -->
+        </div>
+      </div>
+    </div>
+    </div>
+    <!-- /SECTION: TRANSIT SERVICE -->
+    </div>
+    </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-org">
+        <svg class="footer-home-icon" viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+        </svg>
+        <div>
+          <strong>Houston-Galveston Area Council</strong><br>
+          3555 Timmons Ln.<br>
+          Houston, TX 77027
+        </div>
+      </div>
+      <div class="footer-contact">
+        <h4>Contact Us</h4>
+        <p>Phone: 713-627-3200</p>
+        <div class="footer-social">
+          <a href="https://www.facebook.com/HouGalvAreaCog" target="_blank" aria-label="Facebook">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+              <path
+                d="M22.675 0H1.325C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.323-.593 1.323-1.325V1.325C24 .593 23.407 0 22.675 0z" />
+            </svg>
+          </a>
+          <a href="https://x.com/HouGalvAreaCog" target="_blank" aria-label="X">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+              <path
+                d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+            </svg>
+          </a>
+          <a href="https://www.linkedin.com/company/houston-galveston-area-council" target="_blank"
+            aria-label="LinkedIn">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+              <path
+                d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+            </svg>
+          </a>
+          <a href="https://www.youtube.com/HouGalvAreaCog" target="_blank" aria-label="YouTube">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+              <path
+                d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.5 12 3.5 12 3.5s-7.505 0-9.377.55a3.016 3.016 0 0 0-2.122 2.136C0 8.1 0 12 0 12s0 3.9.501 5.814a3.016 3.016 0 0 0 2.122 2.136c1.872.55 9.377.55 9.377.55s7.505 0 9.377-.55a3.016 3.016 0 0 0 2.122-2.136C24 15.9 24 12 24 12s0-3.9-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+            </svg>
+          </a>
+          <a href="https://www.instagram.com/hougalvareacog/" target="_blank" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+              <path
+                d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Enlarged image modal (Freeway-Bottlenecks time-based map) -->
+  <div class="modal pm-image-modal" id="pmBottlenecksImageModal" role="dialog" aria-modal="true"
+    aria-label="Enlarged map view">
+    <div class="pm-image-modal-content" onclick="event.stopPropagation()">
+      <button type="button" class="pm-image-modal-close" id="pmBottlenecksImageModalClose"
+        aria-label="Close">&times;</button>
+      <img id="pmBottlenecksImageModalImg" src="" alt="" />
+    </div>
+  </div>
+
+  <script src="js/traffic-analysis-summary.js"></script>
+  <script>
+    // Mega-menu style Performance Measures menu (3-level cascade)
+
+    const pmTrigger = document.getElementById('pmTrigger');
+    const pmMenu = document.getElementById('pmMenu');
+    const pmMainList = document.getElementById('pmMainList');
+    const pmSubList = document.getElementById('pmSubList');
+    const pmSubSubList = document.getElementById('pmSubSubList');
+    const pmBreadcrumbTrail = document.getElementById('pmBreadcrumbTrail');
+
+    // Hover intent timer IDs
+    let mainHoverTimer = null;
+    let subHoverTimer = null;
+
+    // Keyboard navigation state
+    let pmOpen = false;
+    let focusedColumn = 'main'; // 'main' | 'sub' | 'subsub'
+    let focusedIndex = { main: 0, sub: 0, subsub: 0 };
+
+    // Hierarchical data structure
+    const PM_TREE = {
+      baseline_weekday: {
+        label: 'Baseline Weekday',
+        children: {
+          baseline_weekday_wc_trips: { label: 'WC Trips Flow Patterns', value: 'baseline_weekday_wc_trips' },
+          baseline_weekday_bottlenecks: { label: 'Freeway-Bottlenecks', value: 'baseline_weekday_bottlenecks' },
+          baseline_weekday_route_travel: { label: 'Route Travel Time', value: 'baseline_weekday_route_travel' },
+          baseline_weekday_corridor: { label: 'Key-Arterials', value: 'baseline_weekday_corridor' },
+          baseline_weekday_volume: { label: 'Baseline volume', value: 'baseline_weekday_volume' },
+          baseline_weekday_congestion: { label: 'Baseline congestion', value: 'baseline_weekday_congestion' }
+        }
+      },
+      baseline_weekend: {
+        label: 'Baseline Weekend',
+        children: {
+          baseline_weekend_wc_trips: { label: 'WC Trips Flow Patterns', value: 'baseline_weekend_wc_trips' },
+          baseline_weekend_bottlenecks: { label: 'Freeway-Bottlenecks', value: 'baseline_weekend_bottlenecks' },
+          baseline_weekend_route_travel: { label: 'Route Travel Time', value: 'baseline_weekend_route_travel' },
+          baseline_weekend_corridor: { label: 'Key-Arterials', value: 'baseline_weekend_corridor' },
+          baseline_weekend_volume: { label: 'Baseline volume', value: 'baseline_weekend_volume' },
+          baseline_weekend_congestion: { label: 'Baseline congestion', value: 'baseline_weekend_congestion' }
+        }
+      },
+      incident_scenario: {
+        label: 'Incident Scenario',
+        children: {
+          // incident_location_1: {
+          //   label: 'Incident Scenario 1',
+          //   children: {
+          //     incident_location_1_alternate_routes: {
+          //       label: 'Alternate Routes',
+          //       value: 'incident_location_1_alternate_routes'
+          //     },
+          //     incident_location_1_snapshot: {
+          //       label: 'Snapshot of alternate travel time',
+          //       value: 'incident_location_1_snapshot'
+          //     }
+          //   }
+          // },
+          incident_location_1: { label: 'Incident Scenario 1', value: 'incident_scenario_1' },
+          incident_location_2: { label: 'Incident Scenario 2', value: 'incident_scenario_2' },
+          incident_location_3: { label: 'Incident Scenario 3', value: 'incident_scenario_3' }
+        }
+      },
+      tdm_scenario: {
+        label: 'TDM Scenario',
+        value: 'tdm_scenario'
+      },
+      transit_scenario: {
+        label: 'Transit Scenario',
+        value: 'transit_scenario'
+      }
+    };
+
+    function isLeaf(node) {
+      return !!node.value && !node.children;
+    }
+
+    function updateMenuWidth() {
+      const subVisible = pmSubList.children.length > 0 && document.querySelector('.pm-column-sub.visible');
+      const subSubVisible = pmSubSubList.children.length > 0 && document.querySelector('.pm-column-subsub.visible');
+
+      if (subSubVisible) {
+        pmMenu.style.minWidth = '720px';
+      } else if (subVisible) {
+        pmMenu.style.minWidth = '480px';
+      } else {
+        pmMenu.style.minWidth = '240px';
+      }
+    }
+
+    function openMenu() {
+      pmMenu.classList.add('open');
+      pmTrigger.setAttribute('aria-expanded', 'true');
+      pmOpen = true;
+      renderMainColumn();
+      // Hide sub columns on open
+      document.querySelector('.pm-column-sub').classList.remove('visible');
+      document.querySelector('.pm-column-subsub').classList.remove('visible');
+      clearColumn(pmSubList);
+      clearColumn(pmSubSubList);
+      updateMenuWidth();
+      focusedColumn = 'main';
+      focusedIndex.main = 0;
+    }
+
+    function closeMenu() {
+      pmMenu.classList.remove('open');
+      pmTrigger.setAttribute('aria-expanded', 'false');
+      pmOpen = false;
+      clearColumn(pmSubList);
+      clearColumn(pmSubSubList);
+      document.querySelector('.pm-column-sub').classList.remove('visible');
+      document.querySelector('.pm-column-subsub').classList.remove('visible');
+      updateMenuWidth();
+    }
+
+    function clearColumn(container) {
+      while (container.firstChild) container.removeChild(container.firstChild);
+    }
+
+    function renderMainColumn(selectedKey) {
+      clearColumn(pmMainList);
+      Object.entries(PM_TREE).forEach(([key, node]) => {
+        const hasChildren = node.children && Object.keys(node.children).length > 0;
+        const item = document.createElement('div');
+        item.className = 'pm-item' + (hasChildren ? ' has-children' : '');
+        item.dataset.key = key;
+        item.dataset.level = 'main';
+        item.innerHTML = `<span class="pm-item-label">${node.label}</span>` + (hasChildren ? `<span class="pm-item-chevron">›</span>` : '');
+        if (hasChildren) {
+          item.addEventListener('mouseenter', () => handleMainHover(key));
+          item.addEventListener('mouseleave', () => {
+            if (mainHoverTimer) clearTimeout(mainHoverTimer);
+          });
+        }
+        item.addEventListener('click', () => handleMainClick(key));
+        pmMainList.appendChild(item);
+      });
+      if (selectedKey && PM_TREE[selectedKey]) {
+        handleMainHover(selectedKey);
+      }
+    }
+
+    function renderSubColumn(mainKey, selectedSubKey) {
+      clearColumn(pmSubList);
+      clearColumn(pmSubSubList);
+      document.querySelector('.pm-column-subsub').classList.remove('visible');
+
+      if (!mainKey || !PM_TREE[mainKey] || !PM_TREE[mainKey].children) {
+        document.querySelector('.pm-column-sub').classList.remove('visible');
+        updateMenuWidth();
+        return;
+      }
+
+      const children = PM_TREE[mainKey].children;
+      const subColumn = document.querySelector('.pm-column-sub');
+
+      if (Object.keys(children).length === 0) {
+        subColumn.classList.remove('visible');
+        updateMenuWidth();
+        return;
+      }
+
+      Object.entries(children).forEach(([key, node]) => {
+        const hasChildren = node.children && Object.keys(node.children).length > 0;
+        const item = document.createElement('div');
+        item.className = 'pm-item' + (hasChildren ? ' has-children' : '');
+        item.dataset.key = key;
+        item.dataset.mainKey = mainKey;
+        item.dataset.level = 'sub';
+        item.innerHTML = `<span class="pm-item-label">${node.label}</span>` + (hasChildren ? `<span class="pm-item-chevron">›</span>` : '');
+        if (hasChildren) {
+          item.addEventListener('mouseenter', () => handleSubHover(mainKey, key));
+          item.addEventListener('mouseleave', () => {
+            if (subHoverTimer) clearTimeout(subHoverTimer);
+          });
+        }
+        item.addEventListener('click', (e) => handleSubClick(e, mainKey, key));
+        pmSubList.appendChild(item);
+      });
+
+      subColumn.classList.add('visible');
+      updateMenuWidth();
+
+      if (selectedSubKey && children[selectedSubKey]) {
+        handleSubHover(mainKey, selectedSubKey);
+      }
+    }
+
+    function renderSubSubColumn(mainKey, subKey) {
+      clearColumn(pmSubSubList);
+      const subNode = PM_TREE[mainKey]?.children?.[subKey];
+      const subSubColumn = document.querySelector('.pm-column-subsub');
+
+      if (!subNode || !subNode.children || Object.keys(subNode.children).length === 0) {
+        subSubColumn.classList.remove('visible');
+        updateMenuWidth();
+        return;
+      }
+
+      Object.entries(subNode.children).forEach(([key, node]) => {
+        const item = document.createElement('div');
+        item.className = 'pm-item';
+        item.dataset.key = key;
+        item.dataset.mainKey = mainKey;
+        item.dataset.subKey = subKey;
+        item.dataset.level = 'subsub';
+        item.innerHTML = `<span class="pm-item-label">${node.label}</span>`;
+        item.addEventListener('click', () => handleLeafSelection(mainKey, subKey, key));
+        pmSubSubList.appendChild(item);
+      });
+
+      subSubColumn.classList.add('visible');
+      updateMenuWidth();
+    }
+
+    function handleMainHover(mainKey) {
+      if (mainHoverTimer) clearTimeout(mainHoverTimer);
+      mainHoverTimer = setTimeout(() => {
+        const node = PM_TREE[mainKey];
+        if (node && node.children && Object.keys(node.children).length > 0) {
+          renderSubColumn(mainKey);
+          updateBreadcrumb({ mainKey });
+        }
+      }, 150);
+    }
+
+    function handleMainClick(mainKey) {
+      // Non-leaf: expand submenu when it has children
+      const node = PM_TREE[mainKey];
+      if (node && node.children && Object.keys(node.children).length > 0) {
+        renderSubColumn(mainKey);
+        updateBreadcrumb({ mainKey });
+        return;
+      }
+      // Main-level leaf (e.g., TDM Scenario)
+      if (node && node.value) {
+        handleLeafSelection(mainKey, null, null);
+      }
+    }
+
+    function handleSubHover(mainKey, subKey) {
+      if (subHoverTimer) clearTimeout(subHoverTimer);
+      subHoverTimer = setTimeout(() => {
+        const node = PM_TREE[mainKey]?.children?.[subKey];
+        if (node && node.children && Object.keys(node.children).length > 0) {
+          renderSubSubColumn(mainKey, subKey);
+        } else {
+          clearColumn(pmSubSubList);
+          document.querySelector('.pm-column-subsub').classList.remove('visible');
+          updateMenuWidth();
+        }
+        updateBreadcrumb({ mainKey, subKey });
+      }, 150);
+    }
+
+    function handleSubClick(event, mainKey, subKey) {
+      const node = PM_TREE[mainKey]?.children?.[subKey];
+      if (node && node.children && Object.keys(node.children).length > 0) {
+        // Non-leaf, just expand third column
+        renderSubSubColumn(mainKey, subKey);
+        updateBreadcrumb({ mainKey, subKey });
+        event.stopPropagation();
+        return;
+      }
+      // Leaf node at second level
+      handleLeafSelection(mainKey, subKey, null);
+    }
+
+    function handleLeafSelection(mainKey, subKey, subSubKey) {
+      const mainNode = PM_TREE[mainKey];
+      const subNode = subKey ? mainNode.children[subKey] : null;
+      const leafNode = subSubKey
+        ? mainNode.children[subKey].children[subSubKey]
+        : (subNode || mainNode);
+
+      if (!leafNode || !leafNode.value) return;
+
+      // Update breadcrumb
+      updateBreadcrumb({ mainKey, subKey, subSubKey });
+
+      // Visually mark selected leaf
+      document
+        .querySelectorAll('.pm-item.pm-selected-leaf')
+        .forEach(el => el.classList.remove('pm-selected-leaf'));
+
+      let selector = `.pm-item[data-key="${leafNode.value}"]`;
+      if (subSubKey) {
+        selector = `.pm-item[data-key="${subSubKey}"]`;
+      }
+      const leafEl = pmMenu.querySelector(selector);
+      if (leafEl) leafEl.classList.add('pm-selected-leaf');
+
+      // Trigger navigation / rendering
+      handlePerformanceMeasureChange(leafNode.value);
+      closeMenu();
+    }
+
+    function updateBreadcrumb({ mainKey, subKey, subSubKey }) {
+      const parts = [];
+      if (mainKey && PM_TREE[mainKey]) {
+        parts.push(PM_TREE[mainKey].label);
+      }
+      if (subKey && PM_TREE[mainKey]?.children?.[subKey]) {
+        parts.push(PM_TREE[mainKey].children[subKey].label);
+      }
+      if (subSubKey && PM_TREE[mainKey]?.children?.[subKey]?.children?.[subSubKey]) {
+        parts.push(PM_TREE[mainKey].children[subKey].children[subSubKey].label);
+      }
+      pmBreadcrumbTrail.textContent = parts.length ? ' / ' + parts.join(' / ') : '';
+    }
+
+    pmTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (pmOpen) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    });
+
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+      if (!pmOpen) return;
+      if (!pmMenu.contains(e.target) && e.target !== pmTrigger && !pmTrigger.contains(e.target)) {
+        closeMenu();
+      }
+    });
+
+    // Hide sub columns when mouse leaves menu area
+    pmMenu.addEventListener('mouseleave', () => {
+      if (mainHoverTimer) clearTimeout(mainHoverTimer);
+      if (subHoverTimer) clearTimeout(subHoverTimer);
+      // Keep columns visible while mouse is in menu - only hide on actual leave
+    });
+
+    // Close on ESC and basic keyboard navigation shell
+    document.addEventListener('keydown', (e) => {
+      if (!pmOpen) return;
+      if (e.key === 'Escape') {
+        closeMenu();
+        pmTrigger.focus();
+      }
+    });
+
+    // Function to handle performance measure selection (integrate with existing JS)
+    function handlePerformanceMeasureChange(value) {
+      const pmWcTripFlowImages = document.getElementById('pmWcTripFlowImages');
+      const pmRouteTravelImages = document.getElementById('pmRouteTravelImages');
+      const pmBottlenecks = document.getElementById('pmBottlenecks');
+      const pmCorridorVolume = document.getElementById('pmCorridorVolume');
+      const pmIncidentImages = document.getElementById('pmIncidentImages');
+      const pmDefaultContent = document.getElementById('pmDefaultContent');
+      const pmDefaultStack = document.getElementById('pmDefaultStack');
+      const pmBaselineIframeContent = document.getElementById('pmBaselineIframeContent');
+      const pmBaselineIframe = document.getElementById('pmBaselineIframe');
+      const pmBaselineIframeBreadcrumb = document.getElementById('pmBaselineIframeBreadcrumb');
+      const pmTdmContent = document.getElementById('pmTdmContent');
+      const pmTransitContent = document.getElementById('pmTransitContent');
+      const pmBreadcrumbTrailWc = document.getElementById('pmBreadcrumbTrailWc');
+      const pmBreadcrumbTrailRouteTravel = document.getElementById('pmBreadcrumbTrailRouteTravel');
+      const pmBreadcrumbTrailBottlenecks = document.getElementById('pmBreadcrumbTrailBottlenecks');
+      const pmBreadcrumbTrailCorridor = document.getElementById('pmBreadcrumbTrailCorridor');
+      const pmBreadcrumbTrailIncident = document.getElementById('pmBreadcrumbTrailIncident');
+      const pmBottlenecksCWrap = document.getElementById('pmBottlenecksCWrap');
+
+      const isWcTripFlowWeekday = value === 'baseline_weekday_wc_trips';
+      const isWcTripFlowWeekend = value === 'baseline_weekend_wc_trips';
+      const isRouteTravelWeekday = value === 'baseline_weekday_route_travel';
+      const isRouteTravelWeekend = value === 'baseline_weekend_route_travel';
+      const isBottlenecksWeekday = value === 'baseline_weekday_bottlenecks';
+      const isBottlenecksWeekend = value === 'baseline_weekend_bottlenecks';
+      const isCorridorVolumeWeekday = value === 'baseline_weekday_corridor';
+      const isCorridorVolumeWeekend = value === 'baseline_weekend_corridor';
+      const isBaselineWeekdayVolume = value === 'baseline_weekday_volume';
+      const isBaselineWeekdayCongestion = value === 'baseline_weekday_congestion';
+      const isBaselineWeekendVolume = value === 'baseline_weekend_volume';
+      const isBaselineWeekendCongestion = value === 'baseline_weekend_congestion';
+
+      const isWcTripFlow = isWcTripFlowWeekday || isWcTripFlowWeekend;
+      const isRouteTravel = isRouteTravelWeekday || isRouteTravelWeekend;
+      const isBottlenecks = isBottlenecksWeekday || isBottlenecksWeekend;
+      const isCorridorVolume = isCorridorVolumeWeekday || isCorridorVolumeWeekend;
+      const isBaselineIframeScenario =
+        isBaselineWeekdayVolume ||
+        isBaselineWeekdayCongestion ||
+        isBaselineWeekendVolume ||
+        isBaselineWeekendCongestion;
+      const isIncidentScenario =
+        value === 'incident_scenario_1' ||
+        value === 'incident_scenario_2' ||
+        value === 'incident_scenario_3';
+      const isTdmScenario = value === 'tdm_scenario';
+      const isTransitScenario = value === 'transit_scenario';
+      const isImagePanel = isWcTripFlow || isRouteTravel || isBottlenecks || isCorridorVolume || isIncidentScenario;
+      const baselineIframeUrls = {
+        baseline_weekday_volume: 'https://arcadis.maps.arcgis.com/apps/instant/sidebar/index.html?appid=a387d2792c134224ba3a936fd0947fbb',
+        baseline_weekday_congestion: 'https://arcadis.maps.arcgis.com/apps/instant/compare/index.html?appid=17a305ab5f2d4f0ea12419fdfe91c1fd',
+        baseline_weekend_volume: 'https://arcadis.maps.arcgis.com/apps/instant/sidebar/index.html?appid=ef70f833a80f428c8ed849b8a56e6207',
+        baseline_weekend_congestion: 'https://arcadis.maps.arcgis.com/apps/instant/compare/index.html?appid=4eef5e4265d14e00aa0fbf81d9310553'
+      };
+
+      if (pmWcTripFlowImages) {
+        pmWcTripFlowImages.style.display = isWcTripFlow ? 'block' : 'none';
+        if (isWcTripFlow) {
+          currentWcBase = isWcTripFlowWeekend
+            ? 'data/baseline_weekend/WC_trip_flow_pattern/'
+            : 'data/baseline_weekday/WC_trip_flow_pattern/';
+          const select = document.getElementById('pmWcSelect');
+          if (select && !select.value) select.value = 'wc_ingress';
+          updateWcImage();
+        }
+      }
+      if (pmRouteTravelImages) {
+        pmRouteTravelImages.style.display = isRouteTravel ? 'block' : 'none';
+        if (isRouteTravel) {
+          const base = isRouteTravelWeekend
+            ? 'data/baseline_weekend/route_travel_time/'
+            : 'data/baseline_weekday/route_travel_time/';
+          const ids = [
+            'pmRouteImg1a', 'pmRouteImg1b', 'pmRouteImg1c',
+            'pmRouteImg2a', 'pmRouteImg2b', 'pmRouteImg2c',
+            'pmRouteImg3a', 'pmRouteImg3b', 'pmRouteImg3c',
+            'pmRouteImg4a', 'pmRouteImg4b', 'pmRouteImg4c',
+            'pmRouteImg5a', 'pmRouteImg5b', 'pmRouteImg5c'
+          ];
+          const files = [
+            '1a.png', '1b.png', '1c.png',
+            '2a.png', '2b.png', '2c.png',
+            '3a.png', '3b.png', '3c.png',
+            '4a.png', '4b.png', '4c.png',
+            '5a.png', '5b.png', '5c.png'
+          ];
+          ids.forEach((id, idx) => {
+            const el = document.getElementById(id);
+            if (el) el.src = base + files[idx];
+          });
+          const routeSelect = document.getElementById('pmRouteSelect');
+          if (routeSelect && !routeSelect.value) routeSelect.value = '1';
+          updateRouteTravelView();
+        }
+      }
+      if (pmBottlenecks) {
+        pmBottlenecks.style.display = isBottlenecks ? 'block' : 'none';
+        if (isBottlenecks) {
+          const keyView = document.getElementById('pmBottlenecksKeyMapView');
+          const detailView = document.getElementById('pmBottlenecksRouteDetailView');
+          const keyImg = document.getElementById('pmBottlenecksKeyImg');
+          currentBottlenecksBase = isBottlenecksWeekend
+            ? 'data/baseline_weekend/bottlenecks/'
+            : 'data/baseline_weekday/bottlenecks/';
+          if (keyImg) {
+            keyImg.src = currentBottlenecksBase + 'key map.png';
+          }
+          const legendImg = document.getElementById('pmBottlenecksLegendImg');
+          if (legendImg) legendImg.src = currentBottlenecksBase + 'legend.png';
+          if (keyView) keyView.style.display = '';
+          if (detailView) detailView.style.display = 'none';
+          if (pmBottlenecksCWrap) {
+            pmBottlenecksCWrap.style.display = isBottlenecksWeekend ? 'none' : '';
+          }
+        }
+      }
+      if (pmCorridorVolume) {
+        pmCorridorVolume.style.display = isCorridorVolume ? 'block' : 'none';
+        if (isCorridorVolume) {
+          const keyView = document.getElementById('pmCorridorKeyMapView');
+          const detailView = document.getElementById('pmCorridorDetailView');
+          const keyImg = document.getElementById('pmCorridorKeyImg');
+          currentCorridorBase = isCorridorVolumeWeekend
+            ? 'data/baseline_weekend/corridor_volume/'
+            : 'data/baseline_weekday/corridor_volume/';
+          if (keyImg) {
+            keyImg.src = currentCorridorBase + 'key map.png';
+          }
+          if (keyView) keyView.style.display = '';
+          if (detailView) detailView.style.display = 'none';
+        }
+      }
+      if (pmIncidentImages) {
+        pmIncidentImages.style.display = isIncidentScenario ? 'block' : 'none';
+        if (isIncidentScenario) {
+          const imgA = document.getElementById('pmIncidentImgA');
+          const imgB = document.getElementById('pmIncidentImgB');
+          const imgC = document.getElementById('pmIncidentImgC');
+          const incidentText = document.getElementById('pmIncidentText');
+          const incidentList = document.getElementById('pmIncidentDetails');
+          let scenarioNum = '1';
+          if (value === 'incident_scenario_2') scenarioNum = '2';
+          else if (value === 'incident_scenario_3') scenarioNum = '3';
+          const base = 'data/incident_scenario/incident_scenario_' + scenarioNum + '/incident_' + scenarioNum;
+          if (imgA) { imgA.src = base + 'a.jpg'; imgA.alt = 'Incident Scenario ' + scenarioNum + ' (a)'; }
+          if (imgB) { imgB.src = base + 'b.png'; imgB.alt = 'Incident Scenario ' + scenarioNum + ' (b)'; }
+          if (imgC) { imgC.src = base + 'c.png'; imgC.alt = 'Incident Scenario ' + scenarioNum + ' (c)'; }
+          if (incidentText && incidentList) {
+            if (scenarioNum === '1') {
+              incidentText.textContent = 'Incident Scenario 1 describes a major capacity reduction on the I-610 South Loop, affecting game-day traffic approaching NRG Park.';
+              incidentList.innerHTML = ''
+                + '<li> I-610 SB, south of I-69</li>'
+                + '<li> Partial lane closures: 60% capacity reduction</li>'
+                + '<li> Closure duration: 10:00 AM – 12:00 PM</li>';
+            } else if (scenarioNum === '2') {
+              incidentText.textContent = 'Incident Scenario 2 reflects a major northbound capacity reduction on SH 288 north of the I-610 South Loop.';
+              incidentList.innerHTML = ''
+                + '<li> SH 288 NB, north of I-610 south loop</li>'
+                + '<li> Partial lane closures: 60% capacity reduction</li>'
+                + '<li> Closure duration: 2:00 – 4:00 PM</li>';
+            } else if (scenarioNum === '3') {
+              incidentText.textContent = 'Incident Scenario 3 captures a capacity reduction on the Sidney Sherman Bridge along I-610 southbound.';
+              incidentList.innerHTML = ''
+                + '<li> Sidney Sherman Bridge on I-610 SB</li>'
+                + '<li> Partial lane closures: 60% capacity reduction</li>'
+                + '<li> Closure duration: 10:00 AM – 12:00 PM</li>';
+            }
+          }
+        }
+      }
+      if (pmBaselineIframeContent) {
+        pmBaselineIframeContent.style.display = isBaselineIframeScenario ? 'block' : 'none';
+      }
+      if (isBaselineIframeScenario) {
+        if (pmBaselineIframe) pmBaselineIframe.src = baselineIframeUrls[value] || '';
+        if (pmBaselineIframeBreadcrumb) {
+          let suffix = '';
+          if (isBaselineWeekdayVolume) suffix = 'Baseline Weekday / Baseline volume';
+          else if (isBaselineWeekdayCongestion) suffix = 'Baseline Weekday / Baseline congestion';
+          else if (isBaselineWeekendVolume) suffix = 'Baseline Weekend / Baseline volume';
+          else if (isBaselineWeekendCongestion) suffix = 'Baseline Weekend / Baseline congestion';
+          pmBaselineIframeBreadcrumb.textContent = suffix;
+        }
+      } else {
+        if (pmBaselineIframe) pmBaselineIframe.src = '';
+        if (pmBaselineIframeBreadcrumb) pmBaselineIframeBreadcrumb.textContent = '';
+      }
+
+      const hidesDefaultPanels = isImagePanel || isBaselineIframeScenario || isTdmScenario || isTransitScenario;
+
+      if (pmDefaultContent) pmDefaultContent.style.display = hidesDefaultPanels ? 'none' : 'block';
+      if (pmDefaultStack) pmDefaultStack.style.display = hidesDefaultPanels ? 'none' : 'block';
+      if (pmTdmContent) pmTdmContent.style.display = isTdmScenario ? 'block' : 'none';
+      if (pmTransitContent) pmTransitContent.style.display = isTransitScenario ? 'block' : 'none';
+      if (isTransitScenario && typeof initTransitScenarioOnce === 'function') {
+        // Initialize only when the panel is visible so Leaflet can size correctly.
+        setTimeout(() => initTransitScenarioOnce(), 0);
+      }
+      if (pmBreadcrumbTrailWc) {
+        if (isWcTripFlowWeekday) pmBreadcrumbTrailWc.textContent = ' / Baseline Weekday / WC Trips Flow Patterns';
+        else if (isWcTripFlowWeekend) pmBreadcrumbTrailWc.textContent = ' / Baseline Weekend / WC Trips Flow Patterns';
+        else pmBreadcrumbTrailWc.textContent = '';
+      }
+      if (pmBreadcrumbTrailRouteTravel) {
+        if (isRouteTravelWeekday) pmBreadcrumbTrailRouteTravel.textContent = ' / Baseline Weekday / Route Travel Time';
+        else if (isRouteTravelWeekend) pmBreadcrumbTrailRouteTravel.textContent = ' / Baseline Weekend / Route Travel Time';
+        else pmBreadcrumbTrailRouteTravel.textContent = '';
+      }
+      if (pmBreadcrumbTrailBottlenecks) {
+        if (isBottlenecksWeekday) pmBreadcrumbTrailBottlenecks.textContent = ' / Baseline Weekday / Freeway-Bottlenecks';
+        else if (isBottlenecksWeekend) pmBreadcrumbTrailBottlenecks.textContent = ' / Baseline Weekend / Freeway-Bottlenecks';
+        else pmBreadcrumbTrailBottlenecks.textContent = '';
+      }
+      if (pmBreadcrumbTrailCorridor) {
+        if (isCorridorVolumeWeekday) pmBreadcrumbTrailCorridor.textContent = ' / Baseline Weekday / Key-Arterials';
+        else if (isCorridorVolumeWeekend) pmBreadcrumbTrailCorridor.textContent = ' / Baseline Weekend / Key-Arterials';
+        else pmBreadcrumbTrailCorridor.textContent = '';
+      }
+      if (pmBreadcrumbTrailIncident) {
+        if (isIncidentScenario) {
+          let label = 'Incident Scenario 1';
+          if (value === 'incident_scenario_2') label = 'Incident Scenario 2';
+          else if (value === 'incident_scenario_3') label = 'Incident Scenario 3';
+          pmBreadcrumbTrailIncident.textContent = ' / Incident Scenario / ' + label;
+        } else {
+          pmBreadcrumbTrailIncident.textContent = '';
+        }
+      }
+
+      if (isImagePanel || isBaselineIframeScenario) return;
+
+      // Map values to existing scenarios / data
+      const valueMap = {
+        'baseline_weekday_wc_trips': 'model_scenario_1',
+        'baseline_weekday_bottlenecks': 'model_scenario_1',
+        'baseline_weekday_route_travel': 'model_scenario_1',
+        'baseline_weekday_corridor': 'model_scenario_1',
+        'baseline_weekend_wc_trips': 'model_scenario_1',
+        'baseline_weekend_bottlenecks': 'model_scenario_1',
+        'baseline_weekend_route_travel': 'model_scenario_1',
+        'baseline_weekend_corridor': 'model_scenario_1',
+        'incident_location_1_alternate_routes': 'model_scenario_1',
+        'incident_location_1_snapshot': 'model_scenario_1',
+        'incident_location_2': 'model_scenario_1',
+        'incident_location_3': 'model_scenario_1',
+        'incident_location_n': 'model_scenario_1',
+        'tdm_baseline_weekday_weekend': 'model_scenario_1',
+        'tdm_goal_based': 'jun28_beyonce',
+        'transit_scenario': 'oct6_football'
+      };
+
+      const mappedValue = valueMap[value] || value;
+      const mapFrame = document.getElementById('mapFrame');
+      const routeResults = document.getElementById('routeResults');
+
+      const MAPS = {
+        model_scenario_1: "https://felt.com/embed/map/Weekday-Baseline-Scenario-ISglh3tVSYq77SCNvd7ZID?loc=40.402,-111.859,14z",
+        baseline_scenario: "https://felt.com/embed/map/Event-2-NRG-Jan-11-Playoff-copy-CSHN59AG9BT5KO1HZRoTWAbB?loc=29.69314,-95.41,12.56z",
+        jun28_beyonce: "https://felt.com/embed/map/Event-3-NRG-Jun-28-Beyonce-Concert-copy-9CS5Yjof2TcyzNbEgkbTF9BA?loc=29.685,-95.411,12.56z",
+        oct6_football: "https://felt.com/embed/map/Event4-NRG-Oct-6-2024-Football-Game-copy-MG79CIP7sTmS7yntvbbBYeC?loc=29.685,-95.411,12.56z"
+      };
+
+      if (MAPS[mappedValue] && mapFrame) {
+        mapFrame.src = MAPS[mappedValue];
+      }
+
+      if (typeof loadEventData === 'function') {
+        if (routeResults) {
+          routeResults.innerHTML = '<div style="padding: 30px; text-align: center;">Loading data...</div>';
+        }
+        loadEventData(mappedValue)
+          .then(() => {
+            if (typeof populateSelectors === 'function') populateSelectors();
+            if (typeof renderFilteredResults === 'function') renderFilteredResults();
+            if (typeof drawProfileChart === 'function') {
+              drawProfileChart('arrivalChart', 'arrival', 'var(--good)');
+              drawProfileChart('departureChart', 'departure', 'var(--med)');
+            }
+            if (typeof displayTrafficFlowData === 'function') displayTrafficFlowData();
+            if (typeof displayRidershipTable === 'function') displayRidershipTable();
+          })
+          .catch(error => {
+            console.error('Error loading event data:', error);
+            if (routeResults) {
+              routeResults.innerHTML = '<div style="padding: 30px; text-align: center; color: red;">Error loading data</div>';
+            }
+          });
+      }
+    }
+
+    // Initialize Performance Measures from ?pm= query string when navigating from other tabs
+    (function initFromQueryParam() {
+      try {
+        const params = new URLSearchParams(window.location.search || '');
+        const pmValue = params.get('pm');
+        if (pmValue) {
+          handlePerformanceMeasureChange(pmValue);
+        }
+      } catch (e) {
+        console.warn('Unable to initialize Performance Measures from query param:', e);
+      }
+    })();
+
+    // Helper for WC Trips Flow Patterns dropdown
+    function updateWcImage() {
+      const select = document.getElementById('pmWcSelect');
+      const img = document.getElementById('pmWcSingleImg');
+      if (!select || !img) return;
+      const option = select.value;
+      const config = {
+        wc_ingress: { file: 'trip_flow_WC_ingress.png', alt: 'WC Event Trips – Ingress' },
+        wc_egress: { file: 'trip_flow_WC_egress.png', alt: 'WC Event Trips – Egress' },
+        fan_ingress: { file: 'trip_flow_fan_ingress.png', alt: 'Fan Fest Trips – Ingress' },
+        fan_egress: { file: 'trip_flow_fan_egress.png', alt: 'Fan Fest Trips – Egress' }
+      }[option] || { file: 'trip_flow_WC_ingress.png', alt: 'WC Event Trips – Ingress' };
+      img.src = currentWcBase + config.file;
+      img.alt = config.alt;
+    }
+
+    // Helper for Route Travel Time dropdown (show one row at a time)
+    function updateRouteTravelView() {
+      const select = document.getElementById('pmRouteSelect');
+      const rows = document.querySelectorAll('.pm-route-row');
+      if (!select || !rows.length) return;
+      const value = select.value || '1';
+      rows.forEach(row => {
+        const r = row.getAttribute('data-route');
+        row.style.display = (r === value) ? 'grid' : 'none';
+      });
+    }
+
+    // Transit Scenario (moved from Supply Inputs): initialize map + sliders once
+    let pmTransitSupplyMap = null;
+    let pmTransitInitialized = false;
+
+    // Copied from js/tmp-scenario.js (transit-related only)
+    async function createTransitSupplyMap(containerId, geojsonPath) {
+      const map = L.map(containerId, {
+        scrollWheelZoom: true,
+        zoomControl: true
+      });
+
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+        maxZoom: 19
+      }).addTo(map);
+
+      try {
+        const response = await fetch(geojsonPath);
+        const geojsonData = await response.json();
+
+        const colorMap = {
+          'High Visitor Locations': '#ef4444',
+          'Park & Ride Locations': '#22c55e',
+          'First / Last Mile': '#f59e0b'
+        };
+
+        let parkRideFeature = null;
+        geojsonData.features.forEach(feature => {
+          if (feature.properties.description === 'Park & Ride Locations') {
+            parkRideFeature = feature;
+          }
+        });
+
+        const geojsonLayer = L.geoJSON(geojsonData, {
+          style: function (feature) {
+            const description = feature.properties.description;
+            const color = colorMap[description] || '#666666';
+
+            return {
+              color: color,
+              weight: 5,
+              opacity: 1,
+              fillOpacity: 0
+            };
+          },
+          onEachFeature: function (feature, layer) {
+            if (feature.properties && feature.properties.description) {
+              layer.bindTooltip(feature.properties.description, {
+                permanent: false,
+                sticky: true,
+                className: 'transit-supply-tooltip'
+              });
+            }
+          }
+        }).addTo(map);
+
+        const parkingResponse = await fetch('data/parkingFacility/Parking Facilities.geojson');
+        const parkingData = await parkingResponse.json();
+
+        const parkingLayer = L.geoJSON(parkingData, {
+          pointToLayer: function (feature, latlng) {
+            return L.circleMarker(latlng, {
+              radius: 6,
+              fillColor: '#3b82f6',
+              color: '#ffffff',
+              weight: 1,
+              opacity: 1,
+              fillOpacity: 0.8
+            });
+          },
+          onEachFeature: function (feature, layer) {
+            if (feature.properties && feature.properties.Name) {
+              layer.bindTooltip(feature.properties.Name, {
+                permanent: false,
+                sticky: true
+              });
+            }
+          }
+        }).addTo(map);
+
+        if (parkRideFeature) {
+          const parkRideLayer = L.geoJSON(parkRideFeature);
+          const bounds = parkRideLayer.getBounds();
+          bounds.extend(parkingLayer.getBounds());
+          map.fitBounds(bounds, { padding: [50, 50], maxZoom: 11 });
+        } else {
+          const bounds = geojsonLayer.getBounds();
+          bounds.extend(parkingLayer.getBounds());
+          map.fitBounds(bounds, { padding: [30, 30], maxZoom: 11 });
+        }
+      } catch (error) {
+        console.error('Error loading GeoJSON:', error);
+        map.setView([29.7604, -95.3698], 10);
+      }
+
+      return map;
+    }
+
+    function updateSliderGradient(slider) {
+      const min = slider.min || 0;
+      const max = slider.max || 100;
+      const value = slider.value;
+      const percentage = ((value - min) / (max - min)) * 100;
+      slider.style.background = `linear-gradient(to right, #5b6cf8 0%, #9333ea ${percentage}%, #e0e0e0 ${percentage}%, #e0e0e0 100%)`;
+    }
+
+    function initializeHolisticTransit() {
+      const categories = ['firstlast', 'highvisitor', 'parkride'];
+
+      function updateTotalHolisticCapacity() {
+        let total = 0;
+        categories.forEach(category => {
+          const slider = document.getElementById(`holistic_${category}`);
+          if (slider) total += parseInt(slider.value);
+        });
+        const totalDisplay = document.getElementById('totalHolisticCapacity');
+        if (totalDisplay) totalDisplay.textContent = total.toLocaleString();
+      }
+
+      categories.forEach(category => {
+        const slider = document.getElementById(`holistic_${category}`);
+        const valueDisplay = document.getElementById(`holistic_${category}Value`);
+        if (slider && valueDisplay) {
+          updateSliderGradient(slider);
+          slider.addEventListener('input', function () {
+            valueDisplay.textContent = parseInt(this.value).toLocaleString();
+            updateSliderGradient(this);
+            updateTotalHolisticCapacity();
+          });
+        }
+      });
+
+      updateTotalHolisticCapacity();
+    }
+
+    function initializeTransitService() {
+      const agencies = [
+        'galveston',
+        'harris',
+        'brazos',
+        'conroe',
+        'colorado',
+        'gulfcoast',
+        'fortbend',
+        'woodlands'
+      ];
+
+      function updateTotalTransitCapacity() {
+        let total = 0;
+        agencies.forEach(agency => {
+          const slider = document.getElementById(`transit_${agency}`);
+          if (slider) total += parseInt(slider.value);
+        });
+        const totalDisplay = document.getElementById('totalTransitCapacity');
+        if (totalDisplay) totalDisplay.textContent = total.toLocaleString();
+      }
+
+      agencies.forEach(agency => {
+        const slider = document.getElementById(`transit_${agency}`);
+        const valueDisplay = document.getElementById(`transit_${agency}Value`);
+        if (slider && valueDisplay) {
+          updateSliderGradient(slider);
+          slider.addEventListener('input', function () {
+            valueDisplay.textContent = parseInt(this.value).toLocaleString();
+            updateSliderGradient(this);
+            updateTotalTransitCapacity();
+          });
+        }
+      });
+
+      updateTotalTransitCapacity();
+    }
+
+    async function initTransitScenarioOnce() {
+      if (pmTransitInitialized) {
+        // Just make sure the map is correctly sized when revisiting the tab.
+        setTimeout(() => { if (pmTransitSupplyMap) pmTransitSupplyMap.invalidateSize(); }, 50);
+        return;
+      }
+
+      const transitPanel = document.getElementById('pmTransitContent');
+      const transitSection = document.getElementById('transitServiceSection');
+      if (!transitPanel || !transitSection) return;
+
+      // Ensure section is visible (it was originally display:none in Supply Inputs).
+      transitSection.style.display = 'block';
+
+      // Initialize map + sliders exactly like Supply Inputs did.
+      try {
+        pmTransitSupplyMap = await createTransitSupplyMap('transitSupplyMap', 'data/transit_supply_map_circles.geojson');
+      } catch (e) {
+        console.error('Unable to initialize transit supply map:', e);
+      }
+      initializeHolisticTransit();
+      initializeTransitService();
+
+      pmTransitInitialized = true;
+      setTimeout(() => { if (pmTransitSupplyMap) pmTransitSupplyMap.invalidateSize(); }, 150);
+    }
+
+    // Initial render of main column when page loads so hover works immediately
+    renderMainColumn();
+
+    // WC Trips Flow Patterns: track current image base (weekday vs weekend)
+    let currentWcBase = 'data/baseline_weekday/WC_trip_flow_pattern/';
+
+    // Bottlenecks: time slider maps to Route N_a-{time}.jpg
+    const BOTTLENECK_TIMES = [
+      { value: '9am', label: '9:00 AM' },
+      { value: '10am', label: '10:00 AM' },
+      { value: '11am', label: '11:00 AM' },
+      { value: '2pm', label: '2:00 PM' },
+      { value: '3pm', label: '3:00 PM' },
+      { value: '4pm', label: '4:00 PM' }
+    ];
+    let currentBottlenecksBase = 'data/baseline_weekday/bottlenecks/';
+    let currentBottlenecksRoute = '1';
+
+    function updateBottlenecksTimeImage() {
+      const slider = document.getElementById('pmBottlenecksTimeSlider');
+      const imgA = document.getElementById('pmBottlenecksImgA');
+      const labelsEl = document.getElementById('pmBottlenecksTimeLabels');
+      if (!slider || !imgA) return;
+      const idx = Math.min(parseInt(slider.value, 10) || 0, BOTTLENECK_TIMES.length - 1);
+      const t = BOTTLENECK_TIMES[idx];
+      imgA.src = currentBottlenecksBase + 'Route ' + currentBottlenecksRoute + '_a-' + t.value + '.jpg';
+      if (labelsEl) {
+        const spans = labelsEl.querySelectorAll('.pm-time-label');
+        spans.forEach((s, i) => { s.classList.toggle('active', i === idx); });
+      }
+    }
+
+    document.getElementById('pmBottlenecksRouteList')?.addEventListener('click', function (e) {
+      const btn = e.target.closest('.pm-route-btn');
+      if (!btn) return;
+      const routeNum = btn.getAttribute('data-route');
+      if (!routeNum) return;
+      currentBottlenecksRoute = routeNum;
+      const keyView = document.getElementById('pmBottlenecksKeyMapView');
+      const detailView = document.getElementById('pmBottlenecksRouteDetailView');
+      const imgA = document.getElementById('pmBottlenecksImgA');
+      const imgC = document.getElementById('pmBottlenecksImgC');
+      const routeLabel = btn.textContent.trim();
+      const routeHeader = document.getElementById('pmBottlenecksRouteHeader');
+      if (keyView) keyView.style.display = 'none';
+      if (detailView) detailView.style.display = '';
+      if (routeHeader) routeHeader.textContent = routeLabel;
+      const prefix = currentBottlenecksBase + 'Route ' + routeNum + '_';
+      const slider = document.getElementById('pmBottlenecksTimeSlider');
+      if (slider) slider.value = 0;
+      if (imgA) { imgA.alt = routeLabel + ' – ' + BOTTLENECK_TIMES[0].label; updateBottlenecksTimeImage(); }
+      if (imgC) { imgC.src = prefix + 'c.png'; imgC.alt = routeLabel + ' – Mitigation Strategies'; }
+    });
+    document.getElementById('pmBottlenecksTimeSlider')?.addEventListener('input', function () {
+      updateBottlenecksTimeImage();
+      const imgA = document.getElementById('pmBottlenecksImgA');
+      const slider = document.getElementById('pmBottlenecksTimeSlider');
+      const routeBtn = document.querySelector('#pmBottlenecksRouteList .pm-route-btn[data-route="' + currentBottlenecksRoute + '"]');
+      if (imgA && slider) {
+        const t = BOTTLENECK_TIMES[Math.min(parseInt(slider.value, 10) || 0, BOTTLENECK_TIMES.length - 1)];
+        imgA.alt = (routeBtn ? routeBtn.textContent.trim() : 'Route ' + currentBottlenecksRoute) + ' – ' + t.label;
+      }
+    });
+    document.getElementById('pmBottlenecksBackBtn')?.addEventListener('click', function () {
+      const keyView = document.getElementById('pmBottlenecksKeyMapView');
+      const detailView = document.getElementById('pmBottlenecksRouteDetailView');
+      if (keyView) keyView.style.display = '';
+      if (detailView) detailView.style.display = 'none';
+    });
+
+    // Bottlenecks: click time-based map to open enlarged modal
+    const pmBottlenecksImageModal = document.getElementById('pmBottlenecksImageModal');
+    const pmBottlenecksImageModalImg = document.getElementById('pmBottlenecksImageModalImg');
+    const pmBottlenecksImageModalClose = document.getElementById('pmBottlenecksImageModalClose');
+    function closeBottlenecksImageModal() {
+      if (pmBottlenecksImageModal) pmBottlenecksImageModal.classList.remove('show');
+    }
+    function openImageInModal(img) {
+      if (!img || !img.src) return;
+      if (pmBottlenecksImageModalImg) {
+        pmBottlenecksImageModalImg.src = img.src;
+        pmBottlenecksImageModalImg.alt = img.alt || 'Enlarged map';
+      }
+      if (pmBottlenecksImageModal) pmBottlenecksImageModal.classList.add('show');
+    }
+
+    // Bottlenecks time-based image → modal
+    document.querySelector('.pm-bottlenecks-map-wrap')?.addEventListener('click', function () {
+      const imgA = document.getElementById('pmBottlenecksImgA');
+      openImageInModal(imgA);
+    });
+    document.querySelector('.pm-bottlenecks-legend-wrap')?.addEventListener('click', function () {
+      const legendImg = document.getElementById('pmBottlenecksLegendImg');
+      openImageInModal(legendImg);
+    });
+
+    // TDM link-level maps → reuse same modal
+    document.getElementById('pmTdmMapAm')?.addEventListener('click', function () {
+      openImageInModal(this);
+    });
+    document.getElementById('pmTdmMapPm')?.addEventListener('click', function () {
+      openImageInModal(this);
+    });
+    document.getElementById('pmTdmOdMap')?.addEventListener('click', function () {
+      openImageInModal(this);
+    });
+    document.getElementById('pmTdmVmtVht')?.addEventListener('click', function () {
+      openImageInModal(this);
+    });
+    document.getElementById('pmTdmRegionalMap')?.addEventListener('click', function () {
+      openImageInModal(this);
+    });
+    document.getElementById('pmTdmModelMap')?.addEventListener('click', function () {
+      openImageInModal(this);
+    });
+    document.getElementById('pmTdmHexImg')?.addEventListener('click', function () {
+      openImageInModal(this);
+    });
+
+    // TDM Scenario: left-side tab navigation within the TDM panel
+    (function initScenarioTabs() {
+      function wireTabs(containerId, defaultKey) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const tabs = container.querySelectorAll('.pm-tdm-tab');
+        const panels = container.querySelectorAll('.pm-tdm-panel');
+        if (!tabs.length || !panels.length) return;
+
+        function activateTab(key) {
+          tabs.forEach(tab => {
+            const isActive = tab.getAttribute('data-tdm-tab-button') === key;
+            tab.classList.toggle('pm-tdm-tab-active', isActive);
+          });
+          panels.forEach(panel => {
+            const isActive = panel.getAttribute('data-tdm-tab') === key;
+            panel.classList.toggle('pm-tdm-panel-active', isActive);
+          });
+        }
+
+        tabs.forEach(tab => {
+          tab.addEventListener('click', () => {
+            const key = tab.getAttribute('data-tdm-tab-button');
+            if (!key) return;
+            activateTab(key);
+          });
+        });
+
+        activateTab(defaultKey);
+      }
+
+      // TDM Scenario tabs
+      wireTabs('pmTdmContent', 'overview');
+    })();
+    pmBottlenecksImageModalClose?.addEventListener('click', closeBottlenecksImageModal);
+    pmBottlenecksImageModal?.addEventListener('click', function (e) { if (e.target === pmBottlenecksImageModal) closeBottlenecksImageModal(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && pmBottlenecksImageModal?.classList.contains('show')) closeBottlenecksImageModal(); });
+
+    // Key-Arterials: corridor list click → show 2 images; Back → show key map + list
+    let currentCorridorBase = 'data/baseline_weekday/corridor_volume/';
+    document.getElementById('pmCorridorRouteList')?.addEventListener('click', function (e) {
+      const btn = e.target.closest('.pm-route-btn');
+      if (!btn) return;
+      const routeNum = btn.getAttribute('data-route');
+      if (!routeNum) return;
+      const keyView = document.getElementById('pmCorridorKeyMapView');
+      const detailView = document.getElementById('pmCorridorDetailView');
+      const imgA = document.getElementById('pmCorridorImgA');
+      const imgB = document.getElementById('pmCorridorImgB');
+      const routeLabel = btn.textContent.trim();
+      if (keyView) keyView.style.display = 'none';
+      if (detailView) detailView.style.display = '';
+      const prefix = currentCorridorBase + 'Route ' + routeNum + '_';
+      if (imgA) { imgA.src = prefix + 'a.png'; imgA.alt = routeLabel + ' (a)'; }
+      if (imgB) { imgB.src = prefix + 'b.png'; imgB.alt = routeLabel + ' (b)'; }
+    });
+    document.getElementById('pmCorridorBackBtn')?.addEventListener('click', function () {
+      const keyView = document.getElementById('pmCorridorKeyMapView');
+      const detailView = document.getElementById('pmCorridorDetailView');
+      if (keyView) keyView.style.display = '';
+      if (detailView) detailView.style.display = 'none';
+    });
+
+    // WC Trips Flow Patterns dropdown
+    document.getElementById('pmWcSelect')?.addEventListener('change', updateWcImage);
+
+    // Route Travel Time dropdown
+    document.getElementById('pmRouteSelect')?.addEventListener('change', updateRouteTravelView);
+
+    // Handle query parameter from other pages
+    const urlParams = new URLSearchParams(window.location.search);
+    const pmValue = urlParams.get('pm');
+    if (pmValue) {
+      // Find the item in PM_TREE and auto-select it
+      for (const [mainKey, mainNode] of Object.entries(PM_TREE)) {
+        if (mainNode.children) {
+          for (const [subKey, subNode] of Object.entries(mainNode.children)) {
+            if (subNode.value === pmValue) {
+              // Found at second level
+              setTimeout(() => {
+                handleLeafSelection(mainKey, subKey, null);
+              }, 100);
+              break;
+            }
+            if (subNode.children) {
+              for (const [subSubKey, subSubNode] of Object.entries(subNode.children)) {
+                if (subSubNode.value === pmValue) {
+                  // Found at third level
+                  setTimeout(() => {
+                    handleLeafSelection(mainKey, subKey, subSubKey);
+                  }, 100);
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>

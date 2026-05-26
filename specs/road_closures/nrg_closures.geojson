@@ -1,0 +1,175 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "description": "Closure on Murworth Dr"
+      },
+      "geometry": {
+        "coordinates": [
+          [
+            -95.42145474737256,
+            29.685250998447316
+          ],
+          [
+            -95.41709147824986,
+            29.68520048935349
+          ],
+          [
+            -95.41476493690583,
+            29.685065834936452
+          ],
+          [
+            -95.41259495517525,
+            29.684830317380943
+          ]
+        ],
+        "type": "LineString"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "description": "Closure on Lantern Point Dr"
+      },
+      "geometry": {
+        "coordinates": [
+          [
+            -95.41554851637119,
+            29.68213568567343
+          ],
+          [
+            -95.4156016910876,
+            29.68550566339833
+          ],
+          [
+            -95.4160137651378,
+            29.686756446956238
+          ],
+          [
+            -95.41595414740758,
+            29.687151464463014
+          ],
+          [
+            -95.41516231998492,
+            29.68825301081722
+          ]
+        ],
+        "type": "LineString"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "description": "The section of Kirby Dr. south of Westridge St. will likely be closed during half-time to accomodate pedestrian movement."
+      },
+      "geometry": {
+        "coordinates": [
+          [
+            -95.41243546012278,
+            29.678569881971654
+          ],
+          [
+            -95.41245452202713,
+            29.68202591350709
+          ],
+          [
+            -95.41226217363013,
+            29.68201603758041
+          ],
+          [
+            -95.41219986256098,
+            29.678569881971654
+          ]
+        ],
+        "type": "LineString"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "description": "Closure on McNee Rd. (potential)"
+      },
+      "geometry": {
+        "coordinates": [
+          [
+            -95.41775780050608,
+            29.689856352384666
+          ],
+          [
+            -95.41443496661113,
+            29.68789682087342
+          ],
+          [
+            -95.41384749192233,
+            29.687641197930546
+          ],
+          [
+            -95.4129652361293,
+            29.687549946754956
+          ],
+          [
+            -95.41264986135627,
+            29.687568195191616
+          ]
+        ],
+        "type": "LineString"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "description": "Closure on Kirby Dr. between Westridge St. and Gate 11 could be as early as 6 hours prior to the start of the game."
+      },
+      "geometry": {
+        "coordinates": [
+          [
+            -95.41262662392512,
+            29.689809014197593
+          ],
+          [
+            -95.41246395197464,
+            29.685652281887002
+          ],
+          [
+            -95.4124504533953,
+            29.6837757741595
+          ],
+          [
+            -95.41248027369677,
+            29.682109461808963
+          ],
+          [
+            -95.41230238620852,
+            29.682096786800585
+          ],
+          [
+            -95.4123106904063,
+            29.684256864469262
+          ],
+          [
+            -95.41234232485617,
+            29.6856655688441
+          ],
+          [
+            -95.41246898253728,
+            29.689820498553487
+          ]
+        ],
+        "type": "LineString"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"description": "Gate 11"},
+      "geometry": {
+        "coordinates": [
+          -95.41238796457448,
+          29.689831377255928
+        ],
+        "type": "Point"
+      }
+    }
+  ]
+}

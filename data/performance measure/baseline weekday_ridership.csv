@@ -1,0 +1,12 @@
+Mode,Number,Boarding
+Local Bus,1,14339
+Express Bus,2,1494
+Commuter Bus,3,2686
+Light Rail,4,22411
+,Red Line(700),21690
+,Green Line (702),333
+,Purple Line (701),170
+Cummuter Rail,6,
+BRT,3,828
+,,
+Total,,40930

@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:mso="urn:schemas-microsoft-com:office:office"
+  xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>H-GAC - Supply Inputs</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/leaflet.css" />
+  <script src="js/leaflet.js"></script>
+  <style>
+    /* <span>Model Scenarios</span>-menu (cascading) */
+    .pm-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    .tabs .tab .pm-container {
+      position: relative;
+    }
+
+    .pm-trigger {
+      padding: 0;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: inherit;
+      font-weight: inherit;
+      color: inherit;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+
+    .pm-trigger:hover,
+    .pm-trigger[aria-expanded="true"] {
+      opacity: 0.8;
+    }
+
+    .tabs .tab .pm-trigger {
+      color: inherit;
+    }
+
+    .pm-trigger-icon {
+      font-size: 11px;
+    }
+
+    .pm-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      z-index: 1000;
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+      padding: 8px 0;
+      display: none;
+      min-width: 240px;
+      transition: min-width 0.2s ease;
+    }
+
+    .pm-menu.open {
+      display: block;
+    }
+
+    .pm-columns {
+      position: relative;
+      display: block;
+      height: 320px;
+      padding: 4px 0;
+    }
+
+    .pm-column {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 240px;
+      overflow-y: auto;
+      padding: 4px 0;
+      box-sizing: border-box;
+    }
+
+    .pm-column-main {
+      left: 0;
+      border-right: 1px solid #f0f0f0;
+    }
+
+    .pm-column-sub {
+      left: 240px;
+      border-right: 1px solid #f0f0f0;
+      display: none;
+    }
+
+    .pm-column-subsub {
+      left: 480px;
+      display: none;
+    }
+
+    .pm-column-sub.visible {
+      display: block;
+    }
+
+    .pm-column-subsub.visible {
+      display: block;
+    }
+
+    .pm-column-title {
+      padding: 6px 16px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #999;
+    }
+
+    .pm-item {
+      padding: 8px 18px;
+      font-size: 13px;
+      color: #333;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      white-space: nowrap;
+      transition: background-color 0.12s, color 0.12s;
+    }
+
+    .pm-item:hover,
+    .pm-item.pm-hover {
+      background: #f3f7ef;
+    }
+
+    .pm-item.pm-selected-leaf {
+      background: #2d5016;
+      color: #fff;
+    }
+
+    .pm-item-label {
+      flex: 1;
+    }
+
+    .pm-item-chevron {
+      font-size: 10px;
+      color: #999;
+      margin-left: 8px;
+    }
+
+    .pm-item.has-children .pm-item-chevron {
+      display: inline-block;
+    }
+
+    .pm-item:not(.has-children) .pm-item-chevron {
+      display: none;
+    }
+
+    .pm-item:focus-visible {
+      outline: 2px solid var(--accent, #4A90E2);
+      outline-offset: -2px;
+    }
+
+    @media (max-width: 900px) {
+      .pm-menu {
+        min-width: 100%;
+        right: auto;
+      }
+    }
+  </style>
+
+  <!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:_dlc_DocId msdt:dt="string">NMHUSEVQPPWE-1272307384-1916</mso:_dlc_DocId>
+<mso:_dlc_DocIdItemGuid msdt:dt="string">09893f5f-240d-41a9-9cd4-b7876dfedd60</mso:_dlc_DocIdItemGuid>
+<mso:_dlc_DocIdUrl msdt:dt="string">https://arcadiso365.sharepoint.com/teams/ch-103076646/_layouts/15/DocIdRedir.aspx?ID=NMHUSEVQPPWE-1272307384-1916, NMHUSEVQPPWE-1272307384-1916</mso:_dlc_DocIdUrl>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>
+
+<body>
+  <header>
+    <img src="assets/wc_logo 2.png" alt="FIFA Logo" class="logo" />
+    <div class="tabs">
+      <div class="tab"><a href="index.html" style="color: inherit; text-decoration: none;">Overview</a></div>
+      <div class="tab"><a href="big-data-analysis.html" style="color: inherit; text-decoration: none;">Prior Events
+          Analysis</a></div>
+
+      <div class="tab"><a href="demand-scenario.html" style="color: inherit; text-decoration: none;">Demand Inputs</a>
+      </div>
+      <div class="tab active">Supply Inputs</div>
+      <div class="tab">
+        <div class="pm-container">
+          <button id="pmTrigger" class="pm-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+            <span>Model Scenarios</span>
+            <span class="pm-trigger-icon">▾</span>
+          </button>
+          <div id="pmMenu" class="pm-menu" role="menu" aria-label="Model Scenarios menu">
+            <div class="pm-columns">
+              <div class="pm-column pm-column-main">
+                <div class="pm-column-title"></div>
+                <div id="pmMainList"></div>
+              </div>
+              <div class="pm-column pm-column-sub">
+                <div class="pm-column-title"></div>
+                <div id="pmSubList"></div>
+              </div>
+              <div class="pm-column pm-column-subsub">
+                <div class="pm-column-title">Detail</div>
+                <div id="pmSubSubList"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tab"><a href="game-plan.html" style="color: inherit; text-decoration: none;">Game Plan</a></div>
+      <div class="tab"><a href="post-event-analysis.html" style="color: inherit; text-decoration: none;">Post Event
+          Analysis</a></div>
+    </div>
+    <img src="assets/image 2023.png" alt="HGAC Logo" class="logo" />
+  </header>
+
+  <main>
+    <div class="control-panel">
+      <!-- Page Introduction -->
+      <div class="section">
+        <div class="card">
+          <div class="hd">Supply Inputs</div>
+          <div class="bd">
+            <p class="profile-note" style="font-size: 14px; margin: 0;">
+              This page displays predetermined supply-side information including road closures, planned construction,
+              parking capacity, rideshare capacity, hotel and short-term rentals.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CATEGORY TABS -->
+      <div class="section">
+        <div class="event-selector">
+          <button class="event-btn active" id="btnRoadNetwork">Road Network</button>
+          <button class="event-btn" id="btnParkingRideshare">Parking & Rideshare</button>
+          <button class="event-btn" id="btnHotelsRentals">Hotels & Rentals</button>
+        </div>
+      </div>
+
+      <!-- SECTION 1: ROAD NETWORK -->
+      <div class="section" id="roadNetworkSection">
+        <h2 style="margin: 0 0 16px 0; font-size: 22px; color: var(--ink);">Road Network</h2>
+        <p class="profile-note" style="margin-bottom: 20px;">
+          View road closures, priority routes, and construction information affecting the FIFA World Cup events.
+        </p>
+
+        <!-- 1a: Road Closures -->
+        <div class="card" style="margin-bottom: 20px;">
+          <div class="hd">Road Closures</div>
+          <div class="bd">
+            <p class="profile-note">Street closures implemented for event safety and operations.</p>
+
+            <!-- Maps and Text Side by Side -->
+            <div class="control-row">
+              <!-- Two Maps Stacked (Left) -->
+              <div>
+                <!-- NRG Stadium Closures Map -->
+                <div style="margin-bottom: 16px;">
+                  <label class="control-label" style="margin-bottom: 8px; display: block;">NRG Stadium Area</label>
+                  <div id="nrgClosuresMap" style="height: 350px; border-radius: var(--radius);"></div>
+                </div>
+
+                <!-- Fan Fest Closures Map -->
+                <div>
+                  <label class="control-label" style="margin-bottom: 8px; display: block;">Fan Fest Area (East
+                    Downtown)</label>
+                  <div id="fanfestClosuresMap" style="height: 350px; border-radius: var(--radius);"></div>
+                </div>
+              </div>
+
+              <!-- Road Closures Text List (Right) -->
+              <div style="line-height: 1.8;">
+                <div style="margin-bottom: 16px;">
+                  <strong style="color: var(--ink);">Road Closures near NRG Stadium:</strong>
+                  <ul style="margin: 8px 0; padding-left: 24px;">
+                    <li>Closure on McNee Rd. (potential)</li>
+                    <li>Closure on Lantern Point Dr</li>
+                    <li>Closure on Murworth Dr</li>
+                    <li>Closure on Kirby Dr. between Westridge St. and Gate 11 could be as early as 6 hours prior to the
+                      start of the game</li>
+                    <li>The section of Kirby Dr. south of Westridge St. will likely be closed during half-time to
+                      accomodate pedestrian movement.</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <strong style="color: var(--ink);">Road Closures near Fan Fest:</strong>
+
+                  <div style="margin-top: 12px; margin-left: 16px;">
+                    <strong style="color: var(--accent); font-size: 14px;">Planned closures for FFF:</strong>
+                    <ul style="margin: 8px 0; padding-left: 24px;">
+                      <li>Polk St. from Hutchins St. to Emancipation Ave</li>
+                      <li>Dallas from Hutchins St. to Emancipation Ave</li>
+                      <li>Lamar from Hutchins St. to Emancipation Ave</li>
+                      <li>McKinney from Hutchins St. to Emancipation Ave</li>
+                      <li>Walker from Hutchins St. to Emancipation Ave</li>
+                      <li>Hutchins St. from Polk St. to Walker St.</li>
+                    </ul>
+                  </div>
+
+                  <div style="margin-top: 12px; margin-left: 16px;">
+                    <strong style="color: var(--accent); font-size: 14px;">Additional Potential Closures for Public
+                      Safety (in addition to above):</strong>
+                    <ul style="margin: 8px 0; padding-left: 24px;">
+                      <li>Polk St. to Chartres St. (Chartres remains open)</li>
+                      <li>Dallas to Chartres St. (Chartres remains open)</li>
+                      <li>Lamar to Chartres St. (Chartres remains open)</li>
+                      <li>McKinney to Chartres St. (Chartres remains open)</li>
+                      <li>Walker St. to Chartres St. (Chartres remains open)</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1b & 1d: Priority Routes and Planned Construction Side by Side -->
+        <div class="card" style="margin-bottom: 20px;">
+          <div class="hd">Priority Routes & Planned Construction</div>
+          <div class="bd">
+            <div class="control-row">
+              <!-- 1b: Priority Routes -->
+              <div class="control-group">
+                <label class="control-label">Priority Routes</label>
+                <div id="priorityRoutesMap" style="height: 500px; border-radius: var(--radius);"></div>
+
+                <!-- Expandable Routes Table -->
+                <div style="margin-top: 20px;">
+                  <button id="toggleRoutesTable" onclick="toggleRoutesTable()"
+                    style="padding: 10px 20px; font-size: 14px; font-weight: 600; border: 1px solid var(--muted); border-radius: var(--radius); background: white; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;">
+                    <span id="toggleIcon">▼</span> Show Routes Table
+                  </button>
+
+                  <!-- Collapsible table container -->
+                  <div id="routesTableContainer"
+                    style="display: none; margin-top: 12px; max-height: 600px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: var(--radius); background: white;">
+                    <table id="routesTable" style="width: 100%; border-collapse: collapse;">
+                      <thead
+                        style="position: sticky; top: 0; background: var(--panel); z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <tr>
+                          <th
+                            style="padding: 12px; text-align: left; border-bottom: 2px solid #e0e0e0; font-size: 13px; font-weight: 600; color: var(--ink);">
+                            No.</th>
+                          <th
+                            style="padding: 12px; text-align: left; border-bottom: 2px solid #e0e0e0; font-size: 13px; font-weight: 600; color: var(--ink);">
+                            Color</th>
+                          <th
+                            style="padding: 12px; text-align: left; border-bottom: 2px solid #e0e0e0; font-size: 13px; font-weight: 600; color: var(--ink);">
+                            Category</th>
+                          <th
+                            style="padding: 12px; text-align: left; border-bottom: 2px solid #e0e0e0; font-size: 13px; font-weight: 600; color: var(--ink);">
+                            Origin</th>
+                          <th
+                            style="padding: 12px; text-align: left; border-bottom: 2px solid #e0e0e0; font-size: 13px; font-weight: 600; color: var(--ink);">
+                            Destination</th>
+                          <th
+                            style="padding: 12px; text-align: left; border-bottom: 2px solid #e0e0e0; font-size: 13px; font-weight: 600; color: var(--ink);">
+                            Route/Frequency</th>
+                        </tr>
+                      </thead>
+                      <tbody id="routesTableBody">
+                        <!-- Rows populated dynamically via JavaScript -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 1d: Planned Construction -->
+              <!-- <div class="control-group">
+                <label class="control-label">Planned Construction During FIFA</label>
+                <p class="profile-note">Construction projects scheduled during the FIFA World Cup period.</p>
+                <div id="plannedConstructionMap" style="height: 500px; border-radius: var(--radius);"></div>
+                <p class="profile-note" style="margin-top: 12px; font-style: italic;">
+                  Shapefile data pending - will display planned construction zones.
+                </p>
+              </div> -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 1c: Houston TranStar -->
+        <div class="card" style="margin-bottom: 20px;">
+          <div class="hd">Current Construction - Houston TranStar</div>
+          <div class="bd">
+            <p class="profile-note">Real-time construction and incident information from Houston TranStar.</p>
+            <iframe src="https://traffic.houstontranstar.org/layers/layers_ve.aspx?&inc=true&rc=true&rfw=true&lc=true"
+              style="width: 100%; height: 700px; border: none; border-radius: var(--radius);"
+              title="Houston TranStar Traffic Map">
+            </iframe>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION: HOTELS & RENTALS -->
+      <div class="section" id="hotelsRentalsSection" style="display: none;">
+        <h2 style="margin: 0 0 16px 0; font-size: 22px; color: var(--ink);">Hotels & Rentals</h2>
+        <p class="profile-note" style="margin-bottom: 20px;">
+          View short-term rentals and hotel locations.
+        </p>
+
+        <div class="card" style="margin-bottom: 20px;">
+          <div class="hd">Accommodations</div>
+          <div class="bd">
+            <h4 style="margin: 0 0 8px 0; font-size: 18px; color: var(--ink);">Short-term Rentals</h4>
+            <iframe src="https://mycity.maps.arcgis.com/apps/dashboards/065c7bd5d89b4e09b1e7e4a2c7ae753d"
+              style="width: 100%; height: 700px; border: none; border-radius: var(--radius);"
+              title="Houston TranStar Dashboard">
+            </iframe>
+            <h4 style="margin: 24px 0 8px 0; font-size: 18px; color: var(--ink);">Hotels</h4>
+            <div id="hotelsMap" style="height: 600px; border-radius: var(--radius);"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 3: PARKING -->
+      <div class="section" id="parkingRideshareSection" style="display: none;">
+        <h2 style="margin: 0 0 16px 0; font-size: 22px; color: var(--ink);">Parking Capacity</h2>
+        <h3 class="profile-note" style="margin-bottom: 20px;">
+          Parking capacity and people served at NRG Stadium and Fan Fest locations.
+        </h3>
+
+        <!-- Combined Parking Card: NRG Stadium & Fan Fest -->
+        <div class="card" style="margin-bottom: 20px;">
+          <div class="hd">NRG Stadium & Fan Fest Parking</div>
+          <div class="bd">
+            <p class="profile-note">Adjust parking capacity and occupancy to calculate people served.</p>
+
+            <div class="control-row">
+              <!-- NRG Stadium Column -->
+              <div class="control-group">
+                <label class="control-label">NRG Stadium</label>
+
+                <!-- NRG Parking Map Image -->
+                <div style="margin-bottom: 16px;">
+                  <img src="assets/NRG Parking Map.png" alt="NRG Stadium Parking Map"
+                    style="max-width: 100%; height: auto; border-radius: var(--radius);">
+                </div>
+
+                <!-- NRG Controls -->
+                <div class="control-group">
+                  <label class="control-label">Number of Spaces</label>
+                  <input type="range" id="parking_nrg_spaces" class="slider" min="0" max="17000" step="100"
+                    value="10800">
+                  <div class="slider-value"><span id="parking_nrg_spacesValue">10,800</span> spaces</div>
+                </div>
+
+                <div class="control-group">
+                  <label class="control-label">People per Vehicle</label>
+                  <input type="range" id="parking_nrg_ppv" class="slider" min="1" max="5" step="0.1" value="2.5">
+                  <div class="slider-value"><span id="parking_nrg_ppvValue">2.5</span> people/vehicle</div>
+                </div>
+
+                <!-- NRG Total People Served Display -->
+                <div
+                  style="background: var(--panel); padding: 16px; border-radius: var(--radius); text-align: center; margin-top: 16px;">
+                  <div style="font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px;">
+                    Total People Served
+                  </div>
+                  <div style="font-size: 28px; font-weight: 700; color: var(--accent);">
+                    <span id="parking_nrg_total">27,000</span>
+                  </div>
+                  <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">
+                    people
+                  </div>
+                </div>
+              </div>
+
+              <!-- Fan Fest Column -->
+              <div class="control-group">
+                <label class="control-label">Fan Fest</label>
+
+                <!-- Fan Fest Parking Map Image -->
+                <div style="margin-bottom: 16px; position: relative;">
+                  <img src="assets/Fanfest Parking Map.png" alt="Fan Fest Parking Map"
+                    style="max-width: 100%; height: auto; border-radius: var(--radius);">
+                  <!-- <p class="profile-note"
+                    style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); margin: 0; font-style: italic; text-align: center; width: 80%;">
+                    Data pending - will display Fan Fest parking.
+                  </p> -->
+                </div>
+
+                <!-- Fan Fest Controls -->
+                <div class="control-group">
+                  <label class="control-label">Number of Spaces</label>
+                  <input type="range" id="parking_fanfest_spaces" class="slider" min="0" max="20000" step="100"
+                    value="8000">
+                  <div class="slider-value"><span id="parking_fanfest_spacesValue">8,000</span> spaces</div>
+                </div>
+
+                <div class="control-group">
+                  <label class="control-label">People per Vehicle</label>
+                  <input type="range" id="parking_fanfest_ppv" class="slider" min="1" max="5" step="0.1" value="2.5">
+                  <div class="slider-value"><span id="parking_fanfest_ppvValue">2.5</span> people/vehicle</div>
+                </div>
+
+                <!-- Fan Fest Total People Served Display -->
+                <div
+                  style="background: var(--panel); padding: 16px; border-radius: var(--radius); text-align: center; margin-top: 16px;">
+                  <div style="font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px;">
+                    Total People Served
+                  </div>
+                  <div style="font-size: 28px; font-weight: 700; color: var(--accent);">
+                    <span id="parking_fanfest_total">20,000</span>
+                  </div>
+                  <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">
+                    people
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 4: RIDESHARE -->
+        <h2 style="margin: 0 0 16px 0; font-size: 22px; color: var(--ink);">Rideshare Capacity</h2>
+        <p class="profile-note" style="margin-bottom: 20px;">
+          Rideshare capacity per hour at NRG Stadium and Fan Fest locations.
+        </p>
+
+        <!-- Combined Rideshare Card: NRG Stadium & Fan Fest -->
+        <div class="card" style="margin-bottom: 20px;">
+          <div class="hd">NRG Stadium & Fan Fest Rideshare</div>
+          <div class="bd">
+            <p class="profile-note">Adjust rideshare pickups/dropoffs and occupancy to calculate people served per hour.
+            </p>
+
+            <div class="control-row">
+              <!-- NRG Stadium Column -->
+              <div class="control-group">
+                <label class="control-label">NRG Stadium</label>
+
+                <!-- NRG Controls -->
+                <div class="control-group">
+                  <label class="control-label">Pickups + Dropoffs per Hour</label>
+                  <input type="range" id="rideshare_nrg_pickups" class="slider" min="0" max="3000" step="50"
+                    value="1000">
+                  <div class="slider-value"><span id="rideshare_nrg_pickupsValue">1,000</span> pickups+dropoffs/hour
+                  </div>
+                </div>
+
+                <div class="control-group">
+                  <label class="control-label">People per Vehicle</label>
+                  <input type="range" id="rideshare_nrg_ppv" class="slider" min="1" max="5" step="0.1" value="2.7">
+                  <div class="slider-value"><span id="rideshare_nrg_ppvValue">2.7</span> people/vehicle</div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <!-- NRG Total People Served Display -->
+                <div style="background: var(--panel); padding: 16px; border-radius: var(--radius); text-align: center;">
+                  <div style="font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px;">
+                    People Served per Hour
+                  </div>
+                  <div style="font-size: 28px; font-weight: 700; color: var(--accent);">
+                    <span id="rideshare_nrg_total">2,700</span>
+                  </div>
+                  <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">
+                    people/hour
+                  </div>
+                </div>
+              </div>
+
+              <!-- Fan Fest Column -->
+              <div class="control-group">
+                <label class="control-label">Fan Fest</label>
+
+                <!-- Fan Fest Controls -->
+                <div class="control-group">
+                  <label class="control-label">Pickups + Dropoffs per Hour</label>
+                  <input type="range" id="rideshare_fanfest_pickups" class="slider" min="0" max="3000" step="50"
+                    value="1500">
+                  <div class="slider-value"><span id="rideshare_fanfest_pickupsValue">1,500</span> pickups+dropoffs/hour
+                  </div>
+                </div>
+
+                <div class="control-group">
+                  <label class="control-label">People per Vehicle</label>
+                  <input type="range" id="rideshare_fanfest_ppv" class="slider" min="1" max="5" step="0.1" value="2.7">
+                  <div class="slider-value"><span id="rideshare_fanfest_ppvValue">2.7</span> people/vehicle</div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <!-- Fan Fest Total People Served Display -->
+                <div style="background: var(--panel); padding: 16px; border-radius: var(--radius); text-align: center;">
+                  <div style="font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px;">
+                    People Served per Hour
+                  </div>
+                  <div style="font-size: 28px; font-weight: 700; color: var(--accent);">
+                    <span id="rideshare_fanfest_total">4,050</span>
+                  </div>
+                  <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">
+                    people/hour
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-org">
+        <svg class="footer-home-icon" viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        <div>
+          <strong>Houston-Galveston Area Council</strong><br>
+          3555 Timmons Ln.<br>
+          Houston, TX 77027
+        </div>
+      </div>
+      <div class="footer-contact">
+        <h4>Contact Us</h4>
+        <p>Phone: 713-627-3200</p>
+        <div class="footer-social">
+          <a href="https://www.facebook.com/HouGalvAreaCog" target="_blank" aria-label="Facebook">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M22.675 0H1.325C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.323-.593 1.323-1.325V1.325C24 .593 23.407 0 22.675 0z"/></svg>
+          </a>
+          <a href="https://x.com/HouGalvAreaCog" target="_blank" aria-label="X">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
+          <a href="https://www.linkedin.com/company/houston-galveston-area-council" target="_blank" aria-label="LinkedIn">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          </a>
+          <a href="https://www.youtube.com/HouGalvAreaCog" target="_blank" aria-label="YouTube">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.5 12 3.5 12 3.5s-7.505 0-9.377.55a3.016 3.016 0 0 0-2.122 2.136C0 8.1 0 12 0 12s0 3.9.501 5.814a3.016 3.016 0 0 0 2.122 2.136c1.872.55 9.377.55 9.377.55s7.505 0 9.377-.55a3.016 3.016 0 0 0 2.122-2.136C24 15.9 24 12 24 12s0-3.9-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          </a>
+          <a href="https://www.instagram.com/hougalvareacog/" target="_blank" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/tmp-scenario.js"></script>
+  <script src="js/performance-measures-menu.js"></script>
+</body>
+
+</html>
